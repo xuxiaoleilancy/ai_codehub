@@ -48,15 +48,9 @@ app.include_router(model_router, prefix="/api/v1/models", tags=["models"])
 app.include_router(project_router, prefix="/api/projects", tags=["projects"])
 app.include_router(example_router, prefix="/api/v1", tags=["examples"])
 
-# Mount static files directory
-static_dir = Path(__file__).parent.parent / "static"
-static_dir.mkdir(exist_ok=True)
-app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-
-# Mount components directory
-components_dir = static_dir / "components"
-components_dir.mkdir(exist_ok=True)
-app.mount("/components", StaticFiles(directory=str(components_dir)), name="components")
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/components", StaticFiles(directory="static/components"), name="components")
 
 # 依赖项
 def get_db():

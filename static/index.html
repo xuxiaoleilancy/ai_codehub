@@ -215,18 +215,50 @@
         }
 
         // 加载导航栏并初始化语言
-        fetch('/components/navbar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('navbar-container').innerHTML = html;
-                const currentLang = localStorage.getItem('language') || 'cn';  // 默认使用中文
-                updateTranslations(currentLang);
-            })
-            .catch(error => console.error('Error loading navbar:', error));
-
-        // 监听语言变化
-        window.addEventListener('languageChanged', (e) => {
-            updateTranslations(e.detail);
+        document.addEventListener('DOMContentLoaded', async () => {
+            const navbarContainer = document.getElementById('navbar-container');
+            if (navbarContainer) {
+                try {
+                    // 显示加载状态
+                    navbarContainer.innerHTML = `
+                        <div class="has-text-centered">
+                            <span class="icon is-medium">
+                                <i class="fas fa-spinner fa-pulse"></i>
+                            </span>
+                            <span data-i18n="loading">加载中...</span>
+                        </div>
+                    `;
+                    
+                    const response = await fetch('/components/navbar.html');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const html = await response.text();
+                    navbarContainer.innerHTML = html;
+                    
+                    // 初始化语言
+                    const savedLang = localStorage.getItem('language') || 'zh';
+                    document.documentElement.lang = savedLang;
+                    updateTranslations(savedLang);
+                    
+                    // 监听语言切换
+                    document.addEventListener('languageChanged', (event) => {
+                        updateTranslations(event.detail.language);
+                    });
+                } catch (error) {
+                    console.error('Error loading navbar:', error);
+                    navbarContainer.innerHTML = `
+                        <div class="notification is-warning">
+                            <button class="delete"></button>
+                            <p data-i18n="navbar_load_error">导航栏加载失败，请刷新页面重试</p>
+                        </div>
+                    `;
+                    // 添加关闭通知的功能
+                    navbarContainer.querySelector('.delete')?.addEventListener('click', () => {
+                        navbarContainer.innerHTML = '';
+                    });
+                }
+            }
         });
     </script>
 </body>
