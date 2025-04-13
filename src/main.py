@@ -47,7 +47,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(model_router, prefix="/api/v1/models", tags=["models"])
-app.include_router(project_router, prefix="/api/projects", tags=["projects"])
+app.include_router(project_router, prefix="/api/v1/projects", tags=["projects"])
 app.include_router(example_router, prefix="/api/v1", tags=["examples"])
 
 # Mount static files
@@ -78,6 +78,10 @@ async def read_register_page(request: Request):
 @app.get("/login", response_class=HTMLResponse)
 async def read_login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/profile", response_class=HTMLResponse)
+async def read_profile_page(request: Request):
+    return templates.TemplateResponse("profile.html", {"request": request})
 
 @app.get("/examples", response_class=HTMLResponse)
 async def read_examples_page(request: Request):

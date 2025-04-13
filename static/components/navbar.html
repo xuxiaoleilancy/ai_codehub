@@ -39,7 +39,7 @@
                         <button class="button is-light" id="lang-zh">中文</button>
                     </div>
                     <!-- 未登录状态 -->
-                    <div id="guest-buttons">
+                    <div class="guest-buttons">
                         <a class="button is-light" href="/login" data-i18n="login">
                             登录
                         </a>
@@ -48,14 +48,14 @@
                         </a>
                     </div>
                     <!-- 已登录状态 -->
-                    <div id="user-info" class="is-hidden">
+                    <div class="user-buttons" style="display: none;">
                         <div class="dropdown is-right is-hoverable">
                             <div class="dropdown-trigger">
                                 <button class="button is-light" aria-haspopup="true" aria-controls="user-menu">
                                     <span class="icon">
                                         <i class="fas fa-user"></i>
                                     </span>
-                                    <span id="username-display"></span>
+                                    <span class="username"></span>
                                 </button>
                             </div>
                             <div class="dropdown-menu" id="user-menu" role="menu">
@@ -64,7 +64,7 @@
                                         个人资料
                                     </a>
                                     <hr class="dropdown-divider">
-                                    <a class="dropdown-item" id="logout-button" data-i18n="logout">
+                                    <a class="dropdown-item" id="logout-button" href="#" data-i18n="logout">
                                         退出登录
                                     </a>
                                 </div>
@@ -122,8 +122,80 @@
 </style>
 
 <script>
-    // 导航栏汉堡菜单
+    // 将检查登录状态的函数移到全局作用域
+    window.checkLoginStatus = function() {
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        const guestButtons = document.querySelector('.guest-buttons');
+        const userButtons = document.querySelector('.user-buttons');
+        const usernameDisplay = document.querySelector('.username');
+
+        if (token && username) {
+            // 已登录状态
+            if (guestButtons) guestButtons.style.display = 'none';
+            if (userButtons) userButtons.style.display = 'block';
+            if (usernameDisplay) usernameDisplay.textContent = username;
+        } else {
+            // 未登录状态
+            if (guestButtons) guestButtons.style.display = 'block';
+            if (userButtons) userButtons.style.display = 'none';
+        }
+    };
+
+    // 添加登出事件监听
     document.addEventListener('DOMContentLoaded', () => {
+        // 立即检查登录状态
+        checkLoginStatus();
+
+        const logoutButton = document.getElementById('logout-button');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                try {
+                    const response = await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        // 清除本地存储
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('username');
+                        localStorage.removeItem('is_superuser');
+                        
+                        // 更新导航栏状态
+                        checkLoginStatus();
+                        
+                        // 显示成功消息
+                        const notification = document.createElement('div');
+                        notification.className = 'notification is-success';
+                        notification.innerHTML = `
+                            <button class="delete"></button>
+                            <p data-i18n="logout_success">登出成功</p>
+                        `;
+                        document.body.appendChild(notification);
+                        
+                        // 3秒后移除通知并刷新页面
+                        setTimeout(() => {
+                            notification.remove();
+                            window.location.href = '/';
+                        }, 3000);
+                    } else {
+                        const error = await response.json();
+                        console.error('Logout failed:', error.detail);
+                    }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+            });
+        }
+
+        // 导航栏汉堡菜单
         const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
         if ($navbarBurgers.length > 0) {
             $navbarBurgers.forEach(el => {
@@ -168,7 +240,7 @@
         }
 
         // 检查登录状态
-        checkLoginStatus();
+        window.checkLoginStatus();
     });
 
     // 切换语言函数
@@ -189,50 +261,8 @@
         updateTranslations(lang);
     }
 
-    // 检查登录状态
-    function checkLoginStatus() {
-        const token = localStorage.getItem('token');
-        const username = localStorage.getItem('username');
-        const guestButtons = document.getElementById('guest-buttons');
-        const userInfo = document.getElementById('user-info');
-        const usernameDisplay = document.getElementById('username-display');
-        const logoutButton = document.getElementById('logout-button');
-
-        if (token && username) {
-            // 已登录状态
-            guestButtons.classList.add('is-hidden');
-            userInfo.classList.remove('is-hidden');
-            usernameDisplay.textContent = username;
-
-            // 添加登出事件监听
-            logoutButton.addEventListener('click', async (e) => {
-                e.preventDefault();
-                try {
-                    const response = await fetch('/api/v1/auth/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-
-                    if (response.ok) {
-                        // 清除本地存储
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('username');
-                        
-                        // 刷新页面
-                        window.location.href = '/';
-                    } else {
-                        console.error('Logout failed');
-                    }
-                } catch (error) {
-                    console.error('Logout error:', error);
-                }
-            });
-        } else {
-            // 未登录状态
-            guestButtons.classList.remove('is-hidden');
-            userInfo.classList.add('is-hidden');
-        }
-    }
+    // 监听登录状态变化事件
+    document.addEventListener('loginStatusChanged', () => {
+        window.checkLoginStatus();
+    });
 </script> 

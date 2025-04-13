@@ -25,6 +25,15 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # OAuth2 密码Bearer方案
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
+class LoginData(BaseModel):
+    username: str
+    password: str
+
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """验证密码"""
     return pwd_context.verify(plain_password, hashed_password)
@@ -63,10 +72,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     if user is None:
         raise credentials_exception
     return user
-
-class LoginData(BaseModel):
-    username: str
-    password: str
 
 @router.post("/login", response_model=Token)
 async def login(
@@ -137,8 +142,54 @@ async def register_user(
         )
 
 @router.get("/me", response_model=UserInDB)
-async def read_users_me(
-    current_user: User = Depends(get_current_active_user),
-) -> Any:
+async def get_current_user(current_user: User = Depends(get_current_active_user)):
     """获取当前用户信息"""
-    return current_user 
+    return current_user
+
+@router.put("/me", response_model=UserInDB)
+async def update_user(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+) -> Any:
+    """更新用户资料"""
+    try:
+        # 验证当前密码
+        if user_update.current_password and not verify_password(user_update.current_password, current_user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="当前密码错误"
+            )
+        
+        # 更新邮箱
+        if user_update.email is not None:
+            # 检查邮箱是否已被其他用户使用
+            existing_user = db.query(User).filter(
+                User.email == user_update.email,
+                User.id != current_user.id
+            ).first()
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="邮箱已被其他用户使用"
+                )
+            current_user.email = user_update.email
+        
+        # 更新密码
+        if user_update.new_password:
+            current_user.hashed_password = get_password_hash(user_update.new_password)
+        
+        db.commit()
+        db.refresh(current_user)
+        return current_user
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+@router.post("/logout")
+async def logout():
+    """用户登出"""
+    return {"message": "Logout successful"} 

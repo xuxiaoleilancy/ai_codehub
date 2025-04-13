@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
     <script src="/static/js/locales.js"></script>
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/common.js"></script>
     <style>
         .login-container {
             margin-top: 3rem;
@@ -64,23 +65,9 @@
     </section>
 
     <script>
-        // 初始化语言
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedLang = localStorage.getItem('language') || 'zh';
-            document.documentElement.lang = savedLang;
-            updateTranslations(savedLang);
-
+        document.addEventListener('DOMContentLoaded', async () => {
             // 加载导航栏
-            fetch('/components/navbar.html')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('navbar-container').innerHTML = html;
-                    // 初始化导航栏中的语言切换
-                    const savedLang = localStorage.getItem('language') || 'zh';
-                    document.documentElement.lang = savedLang;
-                    updateTranslations(savedLang);
-                })
-                .catch(error => console.error('Error loading navbar:', error));
+            await loadNavbar();
 
             // 处理登录表单提交
             const form = document.getElementById('loginForm');
@@ -107,8 +94,11 @@
                         
                         // 保存用户信息和令牌
                         localStorage.setItem('token', data.access_token);
-                        localStorage.setItem('username', username);
+                        localStorage.setItem('username', data.username);
                         localStorage.setItem('is_superuser', data.is_superuser);
+                        
+                        // 更新导航栏状态
+                        updateNavbarLoginState();
                         
                         // 显示成功消息
                         errorMessage.textContent = i18n.getText('login_success');
@@ -116,10 +106,10 @@
                         errorMessage.classList.add('is-success');
                         errorMessage.classList.remove('is-hidden');
                         
-                        // 直接跳转，不使用 replace
-                        console.log('Redirecting to models page...');
-                        window.location.href = '/models';
-                        return;
+                        // 延迟跳转，让用户看到成功消息
+                        setTimeout(() => {
+                            window.location.replace('/models');
+                        }, 1000);
                     } else {
                         const error = await response.json();
                         errorMessage.textContent = error.detail || i18n.getText('login_failed');

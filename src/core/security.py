@@ -35,7 +35,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
-) -> Dict[str, Any]:
+) -> User:
     """获取当前用户"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -52,21 +52,21 @@ async def get_current_user(
     user = db.query(User).filter(User.username == username).first()
     if user is None:
         raise credentials_exception
-    return {"username": username, "is_active": user.is_active, "is_superuser": user.is_superuser}
+    return user
 
 async def get_current_active_user(
-    current_user: Dict[str, Any] = Depends(get_current_user),
-) -> Dict[str, Any]:
+    current_user: User = Depends(get_current_user),
+) -> User:
     """获取当前活跃用户"""
-    if not current_user.get("is_active"):
+    if not current_user.is_active:
         raise HTTPException(status_code=400, detail="用户未激活")
     return current_user
 
 async def get_current_active_superuser(
-    current_user: Dict[str, Any] = Depends(get_current_user),
-) -> Dict[str, Any]:
+    current_user: User = Depends(get_current_user),
+) -> User:
     """获取当前活跃超级用户"""
-    if not current_user.get("is_superuser"):
+    if not current_user.is_superuser:
         raise HTTPException(
             status_code=400, detail="用户没有足够的权限"
         )

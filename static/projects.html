@@ -1,12 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="projects">Projects - AI CodeHub</title>
+    <title data-i18n="projects">项目管理 - AI CodeHub</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <script src="/static/js/locales.js"></script>
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/common.js"></script>
     <style>
+        .navbar {
+            margin-bottom: 2rem;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .navbar-item {
+            padding: 0.5rem 1rem;
+        }
         .projects-container {
             margin-top: 2rem;
         }
@@ -16,17 +28,18 @@
     </style>
 </head>
 <body>
+    <!-- Include navigation bar -->
     <div id="navbar-container"></div>
 
     <section class="section">
         <div class="container projects-container">
             <div class="level">
                 <div class="level-left">
-                    <h1 class="title" data-i18n="projects">Projects</h1>
+                    <h1 class="title" data-i18n="projects">项目管理</h1>
                 </div>
                 <div class="level-right">
                     <button class="button is-primary" onclick="showCreateProjectModal()" data-i18n="create_project">
-                        Create Project
+                        创建项目
                     </button>
                 </div>
             </div>
@@ -35,10 +48,10 @@
                 <table class="table is-fullwidth is-striped">
                     <thead>
                         <tr>
-                            <th data-i18n="project_name">Project Name</th>
-                            <th data-i18n="project_description">Description</th>
-                            <th data-i18n="project_status">Status</th>
-                            <th data-i18n="project_actions">Actions</th>
+                            <th data-i18n="project_name">项目名称</th>
+                            <th data-i18n="project_description">描述</th>
+                            <th data-i18n="project_status">状态</th>
+                            <th data-i18n="project_actions">操作</th>
                         </tr>
                     </thead>
                     <tbody id="projectsTableBody">
@@ -54,13 +67,13 @@
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
-                <p class="modal-card-title" data-i18n="create_project">Create Project</p>
+                <p class="modal-card-title" data-i18n="create_project">创建项目</p>
                 <button class="delete" aria-label="close" onclick="closeCreateProjectModal()"></button>
             </header>
             <section class="modal-card-body">
                 <form id="createProjectForm">
                     <div class="field">
-                        <label class="label" data-i18n="project_name">Project Name</label>
+                        <label class="label" data-i18n="project_name">项目名称</label>
                         <div class="control">
                             <input class="input" type="text" id="projectName" name="name" required 
                                    data-i18n-placeholder="project_name">
@@ -68,7 +81,7 @@
                     </div>
 
                     <div class="field">
-                        <label class="label" data-i18n="project_description">Description</label>
+                        <label class="label" data-i18n="project_description">描述</label>
                         <div class="control">
                             <textarea class="textarea" id="projectDescription" name="description" 
                                       data-i18n-placeholder="project_description"></textarea>
@@ -77,36 +90,29 @@
                 </form>
             </section>
             <footer class="modal-card-foot">
-                <button class="button is-success" onclick="createProject()" data-i18n="create">Create</button>
-                <button class="button" onclick="closeCreateProjectModal()" data-i18n="cancel">Cancel</button>
+                <button class="button is-success" onclick="createProject()" data-i18n="create">创建</button>
+                <button class="button" onclick="closeCreateProjectModal()" data-i18n="cancel">取消</button>
             </footer>
         </div>
     </div>
 
-    <script src="/static/js/locales.js"></script>
-    <script src="/static/js/i18n.js"></script>
     <script>
-        // Initialize i18n
-        i18n.init();
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 检查认证状态
+            if (!checkAuth()) return;
 
-        // Load navigation bar
-        fetch('/components/navbar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('navbar-container').innerHTML = html;
-            })
-            .catch(error => console.error('Error loading navbar:', error));
+            // 加载导航栏
+            await loadNavbar();
 
-        // Check authentication
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/login';
-        }
+            // 加载项目
+            await loadProjects();
+        });
 
         // Load projects
         async function loadProjects() {
+            const token = localStorage.getItem('token');
             try {
-                const response = await fetch('/api/projects', {
+                const response = await fetch('/api/v1/projects/', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -117,11 +123,11 @@
                     const tableBody = document.getElementById('projectsTableBody');
                     tableBody.innerHTML = '';
 
-                    if (projects.length === 0) {
+                    if (!projects || projects.length === 0) {
                         tableBody.innerHTML = `
                             <tr>
                                 <td colspan="4" class="has-text-centered" data-i18n="no_projects">
-                                    No projects found
+                                    暂无项目
                                 </td>
                             </tr>
                         `;
@@ -135,21 +141,24 @@
                                     <td>
                                         <div class="buttons">
                                             <button class="button is-small is-info" onclick="editProject('${project.id}')" 
-                                                    data-i18n="edit">Edit</button>
+                                                    data-i18n="edit">编辑</button>
                                             <button class="button is-small is-danger" onclick="deleteProject('${project.id}')" 
-                                                    data-i18n="delete">Delete</button>
+                                                    data-i18n="delete">删除</button>
                                         </div>
                                     </td>
                                 </tr>
                             `;
                         });
                     }
+                } else if (response.status === 401) {
+                    // 未授权，重定向到登录页面
+                    window.location.href = '/login';
                 } else {
-                    alert(i18n.getText('error'));
+                    alert(getTranslation('load_projects_failed'));
                 }
             } catch (error) {
-                console.error('Error loading projects:', error);
-                alert(i18n.getText('error'));
+                console.error('加载项目时出错:', error);
+                alert(getTranslation('load_projects_error'));
             }
         }
 
@@ -167,32 +176,79 @@
             const form = document.getElementById('createProjectForm');
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
+            const token = localStorage.getItem('token');
 
             try {
-                const response = await fetch('/api/projects', {
+                const response = await fetch('/api/v1/projects/', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(data)
                 });
 
                 if (response.ok) {
-                    alert(i18n.getText('project_created'));
                     closeCreateProjectModal();
-                    loadProjects();
+                    await loadProjects();
+                    alert(getTranslation('create_project_success'));
                 } else {
-                    alert(i18n.getText('error'));
+                    alert(getTranslation('create_project_failed'));
                 }
             } catch (error) {
-                console.error('Error creating project:', error);
-                alert(i18n.getText('error'));
+                console.error('创建项目时出错:', error);
+                alert(getTranslation('create_project_error'));
             }
         }
 
-        // Load projects on page load
-        loadProjects();
+        // Edit project
+        async function editProject(projectId) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/api/v1/projects/${projectId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const project = await response.json();
+                    // TODO: 实现编辑项目的逻辑
+                    alert(getTranslation('edit_project_not_implemented'));
+                } else {
+                    alert(getTranslation('get_project_failed'));
+                }
+            } catch (error) {
+                console.error('编辑项目时出错:', error);
+                alert(getTranslation('edit_project_error'));
+            }
+        }
+
+        // Delete project
+        async function deleteProject(projectId) {
+            const token = localStorage.getItem('token');
+            if (confirm(getTranslation('confirm_delete_project'))) {
+                try {
+                    const response = await fetch(`/api/v1/projects/${projectId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        await loadProjects();
+                        alert(getTranslation('delete_project_success'));
+                    } else {
+                        alert(getTranslation('delete_project_failed'));
+                    }
+                } catch (error) {
+                    console.error('删除项目时出错:', error);
+                    alert(getTranslation('delete_project_error'));
+                }
+            }
+        }
     </script>
 </body>
+</html> 
 </html> 

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="profile">个人资料 - AI CodeHub</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <script src="/static/js/locales.js"></script>
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/common.js"></script>
+    <style>
+        .profile-container {
+            margin-top: 3rem;
+        }
+        .card {
+            box-shadow: 0 0.5em 1em -0.125em rgba(10,10,10,.1), 0 0 0 1px rgba(10,10,10,.02);
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <section class="section">
+        <div class="container profile-container">
+            <div class="columns is-centered">
+                <div class="column is-6">
+                    <div class="card">
+                        <div class="card-content">
+                            <h1 class="title has-text-centered" data-i18n="profile">个人资料</h1>
+                            <form id="profileForm">
+                                <div class="field">
+                                    <label class="label" data-i18n="username">用户名</label>
+                                    <div class="control">
+                                        <input class="input" type="text" id="username" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label" data-i18n="email">邮箱</label>
+                                    <div class="control">
+                                        <input class="input" type="email" id="email">
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label" data-i18n="current_password">当前密码</label>
+                                    <div class="control">
+                                        <input class="input" type="password" id="currentPassword">
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label" data-i18n="new_password">新密码</label>
+                                    <div class="control">
+                                        <input class="input" type="password" id="newPassword">
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label" data-i18n="confirm_password">确认密码</label>
+                                    <div class="control">
+                                        <input class="input" type="password" id="confirmPassword">
+                                    </div>
+                                </div>
+
+                                <div class="notification is-danger is-hidden" id="error-message"></div>
+                                <div class="notification is-success is-hidden" id="success-message"></div>
+
+                                <div class="field">
+                                    <div class="control">
+                                        <button type="submit" class="button is-primary is-fullwidth" data-i18n="update_profile">更新资料</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 检查认证状态
+            if (!checkAuth()) return;
+
+            // 加载导航栏
+            await loadNavbar();
+
+            // 获取用户信息
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('username').value = user.username;
+                    document.getElementById('email').value = user.email || '';
+                } else {
+                    const error = await response.json();
+                    showError(error.detail || i18n.getText('get_profile_failed'));
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                showError(i18n.getText('get_profile_error'));
+            }
+
+            // 处理表单提交
+            const form = document.getElementById('profileForm');
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                // 验证新密码
+                if (newPassword && newPassword !== confirmPassword) {
+                    showError(i18n.getText('passwords_not_match'));
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/auth/me', {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email,
+                            current_password: currentPassword,
+                            new_password: newPassword
+                        })
+                    });
+
+                    if (response.ok) {
+                        showSuccess(i18n.getText('update_profile_success'));
+                        // 清空密码字段
+                        document.getElementById('currentPassword').value = '';
+                        document.getElementById('newPassword').value = '';
+                        document.getElementById('confirmPassword').value = '';
+                    } else {
+                        const error = await response.json();
+                        showError(error.detail || i18n.getText('update_profile_failed'));
+                    }
+                } catch (error) {
+                    console.error('Error updating profile:', error);
+                    showError(i18n.getText('update_profile_error'));
+                }
+            });
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('is-hidden');
+                successMessage.classList.add('is-hidden');
+            }
+
+            function showSuccess(message) {
+                successMessage.textContent = message;
+                successMessage.classList.remove('is-hidden');
+                errorMessage.classList.add('is-hidden');
+            }
+        });
+    </script>
+</body>
+</html> 

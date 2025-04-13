@@ -243,14 +243,20 @@ async def update_model_metadata(
 
 @router.get("/", response_model=List[ModelInDB])
 async def get_models(
-    current_user: Dict[str, Any] = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """获取模型列表"""
     try:
-        user = db.query(User).filter(User.username == current_user["username"]).first()
+        user = db.query(User).filter(User.username == current_user.username).first()
         if not user:
             raise HTTPException(status_code=404, detail="用户不存在")
-        return db.query(Model).filter(Model.owner_id == user.id).all()
+        
+        models = db.query(Model).filter(Model.owner_id == user.id).all()
+        return models
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        print(f"Error in get_models: {str(e)}")  # 添加错误日志
+        raise HTTPException(
+            status_code=500,
+            detail=f"获取模型列表失败: {str(e)}"
+        ) 

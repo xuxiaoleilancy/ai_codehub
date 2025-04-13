@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
     <script src="/static/js/locales.js"></script>
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/common.js"></script>
     <style>
         .navbar {
             margin-bottom: 2rem;
@@ -114,44 +115,13 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // Check authentication first
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.log('No token found, redirecting to login page...');
-                window.location.href = '/login';
-                return;
-            }
-
-            // 初始化语言
-            const savedLang = localStorage.getItem('language') || 'zh';
-            document.documentElement.lang = savedLang;
-            updateTranslations(savedLang);
+            // 检查认证状态
+            if (!checkAuth()) return;
 
             // 加载导航栏
-            const navbarContainer = document.getElementById('navbar-container');
-            if (navbarContainer) {
-                try {
-                    const response = await fetch('/components/navbar.html');
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    const html = await response.text();
-                    navbarContainer.innerHTML = html;
-                } catch (error) {
-                    console.error('Error loading navbar:', error);
-                    navbarContainer.innerHTML = `
-                        <div class="notification is-warning">
-                            <button class="delete"></button>
-                            <p data-i18n="navbar_load_error">导航栏加载失败，请刷新页面重试</p>
-                        </div>
-                    `;
-                    navbarContainer.querySelector('.delete')?.addEventListener('click', () => {
-                        navbarContainer.innerHTML = '';
-                    });
-                }
-            }
+            await loadNavbar();
 
-            // Load models
+            // 加载模型
             await loadModels();
         });
 

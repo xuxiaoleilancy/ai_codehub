@@ -1,43 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="examples">Examples - AI CodeHub</title>
+    <title data-i18n="examples">示例 - AI CodeHub</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
-    <!-- Markdown支持 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/highlight.min.js"></script>
+    <script src="/static/js/locales.js"></script>
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/common.js"></script>
     <style>
         .navbar {
             margin-bottom: 2rem;
         }
-        .example-card {
-            margin-bottom: 2rem;
+        .navbar-brand {
+            font-weight: bold;
         }
-        .markdown-content {
-            padding: 1.5rem;
-            background-color: #f5f5f5;
-            border-radius: 4px;
+        .navbar-item {
+            padding: 0.5rem 1rem;
         }
-        .markdown-content pre {
-            background-color: #ffffff;
-            padding: 1rem;
-            border-radius: 4px;
+        .examples-container {
+            margin-top: 2rem;
+        }
+        .card {
             margin-bottom: 1rem;
-        }
-        .markdown-content code {
-            color: #333;
-            background-color: transparent;
-            padding: 0;
-        }
-        .example-tags {
-            margin-bottom: 1rem;
-        }
-        .example-tag {
-            margin-right: 0.5rem;
         }
     </style>
 </head>
@@ -46,158 +32,138 @@
     <div id="navbar-container"></div>
 
     <section class="section">
-        <div class="container">
-            <h1 class="title" data-i18n="examples">Examples</h1>
-            <div class="content">
-                <div id="examples-container">
-                    <!-- Examples will be loaded here -->
+        <div class="container examples-container">
+            <div class="level">
+                <div class="level-left">
+                    <h1 class="title" data-i18n="examples">示例</h1>
+                </div>
+            </div>
+
+            <div class="columns is-multiline">
+                <!-- 示例卡片将通过 JavaScript 动态加载 -->
+                <div id="examplesContainer" class="columns is-multiline">
+                    <!-- 示例将在这里加载 -->
                 </div>
             </div>
         </div>
     </section>
 
-    <script src="/js/i18n.js"></script>
-    <script src="/js/locales.js"></script>
     <script>
-        // 配置 marked 使用 highlight.js
-        marked.setOptions({
-            highlight: function(code, lang) {
-                if (lang && hljs.getLanguage(lang)) {
-                    return hljs.highlight(code, { language: lang }).value;
-                }
-                return hljs.highlightAuto(code).value;
-            },
-            breaks: true,
-            gfm: true
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 检查认证状态
+            if (!checkAuth()) return;
+
+            // 加载导航栏
+            await loadNavbar();
+
+            // 加载示例
+            await loadExamples();
         });
 
-        // 加载示例数据
+        // 加载示例
         async function loadExamples() {
+            const token = localStorage.getItem('token');
             try {
-                const response = await fetch('/api/v1/examples');
-                const examples = await response.json();
-                displayExamples(examples);
-            } catch (error) {
-                console.error('Error loading examples:', error);
-                // 临时示例数据用于展示
-                const examples = [
-                    {
-                        title: '基础模型加载示例',
-                        description: '展示如何加载和使用预训练模型',
-                        tags: ['PyTorch', '模型加载', '基础'],
-                        code: `
-# 基础模型加载示例
-\`\`\`python
-import torch
-from transformers import AutoModel, AutoTokenizer
-
-def load_model(model_name):
-    # 加载tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    
-    # 加载模型
-    model = AutoModel.from_pretrained(model_name)
-    
-    return tokenizer, model
-
-# 使用示例
-model_name = "bert-base-chinese"
-tokenizer, model = load_model(model_name)
-
-# 准备输入
-text = "这是一个示例文本"
-inputs = tokenizer(text, return_tensors="pt")
-
-# 获取模型输出
-outputs = model(**inputs)
-\`\`\`
-                        `
-                    },
-                    {
-                        title: 'GPU加速示例',
-                        description: '展示如何使用GPU加速模型训练和推理',
-                        tags: ['PyTorch', 'GPU', '性能优化'],
-                        code: `
-# GPU加速示例
-\`\`\`python
-import torch
-import torch.nn as nn
-
-def prepare_model_for_gpu(model):
-    # 检查是否有可用的GPU
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-        # 将模型移动到GPU
-        model = model.to(device)
-        print(f"模型已加载到GPU: {torch.cuda.get_device_name()}")
-    else:
-        device = torch.device("cpu")
-        print("未检测到GPU，使用CPU")
-    
-    return model, device
-
-# 使用示例
-model = nn.Sequential(
-    nn.Linear(10, 5),
-    nn.ReLU(),
-    nn.Linear(5, 1)
-)
-
-# 准备模型和数据
-model, device = prepare_model_for_gpu(model)
-data = torch.randn(100, 10).to(device)
-
-# 在GPU上进行推理
-with torch.no_grad():
-    output = model(data)
-\`\`\`
-                        `
+                const response = await fetch('/api/v1/examples/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
                     }
-                ];
-                displayExamples(examples);
+                });
+
+                if (response.ok) {
+                    const examples = await response.json();
+                    const container = document.getElementById('examplesContainer');
+                    container.innerHTML = '';
+
+                    if (!examples || examples.length === 0) {
+                        container.innerHTML = `
+                            <div class="column is-12">
+                                <div class="notification is-warning">
+                                    <p data-i18n="no_examples">暂无示例</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        examples.forEach(example => {
+                            container.innerHTML += `
+                                <div class="column is-4">
+                                    <div class="card">
+                                        <div class="card-content">
+                                            <h2 class="title is-4">${example.title}</h2>
+                                            <p class="subtitle is-6">${example.description}</p>
+                                            <div class="content">
+                                                <pre><code>${example.code}</code></pre>
+                                            </div>
+                                            <div class="buttons">
+                                                <button class="button is-small is-info" onclick="runExample('${example.id}')" 
+                                                        data-i18n="run">运行</button>
+                                                <button class="button is-small is-primary" onclick="viewExample('${example.id}')" 
+                                                        data-i18n="view">查看</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                } else if (response.status === 401) {
+                    // 未授权，重定向到登录页面
+                    window.location.href = '/login';
+                } else {
+                    alert(getTranslation('load_examples_failed'));
+                }
+            } catch (error) {
+                console.error('加载示例时出错:', error);
+                alert(getTranslation('load_examples_error'));
             }
         }
 
-        // 显示示例
-        function displayExamples(examples) {
-            const container = document.getElementById('examples-container');
-            examples.forEach(example => {
-                const exampleElement = document.createElement('div');
-                exampleElement.className = 'example-card box';
-                
-                // 创建标签
-                const tagsHtml = example.tags.map(tag => 
-                    `<span class="tag is-info example-tag">${tag}</span>`
-                ).join('');
-                
-                exampleElement.innerHTML = `
-                    <h2 class="title is-4">${example.title}</h2>
-                    <div class="example-tags">
-                        ${tagsHtml}
-                    </div>
-                    <p class="subtitle is-6">${example.description}</p>
-                    <div class="markdown-content">
-                        ${marked.parse(example.code)}
-                    </div>
-                `;
-                
-                container.appendChild(exampleElement);
-            });
+        // 运行示例
+        async function runExample(exampleId) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/api/v1/examples/${exampleId}/run`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(getTranslation('run_example_success'));
+                    console.log('运行结果:', result);
+                } else {
+                    alert(getTranslation('run_example_failed'));
+                }
+            } catch (error) {
+                console.error('运行示例时出错:', error);
+                alert(getTranslation('run_example_error'));
+            }
         }
 
-        // 加载导航栏
-        fetch('/components/navbar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('navbar-container').innerHTML = html;
-                // 初始化语言
-                const currentLang = localStorage.getItem('language') || 'cn';
-                updateTranslations(currentLang);
-            })
-            .catch(error => console.error('Error loading navbar:', error));
+        // 查看示例
+        async function viewExample(exampleId) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/api/v1/examples/${exampleId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
 
-        // 页面加载完成后加载示例
-        document.addEventListener('DOMContentLoaded', loadExamples);
+                if (response.ok) {
+                    const example = await response.json();
+                    // TODO: 实现查看示例的详细逻辑
+                    alert(getTranslation('view_example_not_implemented'));
+                } else {
+                    alert(getTranslation('get_example_failed'));
+                }
+            } catch (error) {
+                console.error('查看示例时出错:', error);
+                alert(getTranslation('view_example_error'));
+            }
+        }
     </script>
 </body>
 </html> 

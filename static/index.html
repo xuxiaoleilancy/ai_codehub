@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="/static/js/locales.js"></script>
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/common.js"></script>
     <title data-i18n="welcome">欢迎使用 AI CodeHub</title>
     <style>
         .hero {
@@ -191,6 +192,11 @@
                     const savedLang = localStorage.getItem('language') || 'zh';
                     document.documentElement.lang = savedLang;
                     updateTranslations(savedLang);
+                    
+                    // 检查登录状态
+                    if (typeof window.checkLoginStatus === 'function') {
+                        window.checkLoginStatus();
+                    }
                     
                     // 监听语言切换
                     document.addEventListener('languageChanged', (event) => {
