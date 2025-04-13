@@ -1,0 +1,29 @@
+{
+    "timestamp": "20250413_093407",
+    "system_info": {
+        "platform": "Windows-10-10.0.19045-SP0",
+        "python_version": "3.9.21 (main, Dec 11 2024, 16:35:24) [MSC v.1929 64 bit (AMD64)]",
+        "processor": "Intel64 Family 6 Model 151 Stepping 2, GenuineIntel",
+        "machine": "AMD64"
+    },
+    "test_results": {
+        "environment_variables": {
+            "CUDA_VISIBLE_DEVICES": {
+                "value": "not set",
+                "description": "CUDA device configuration"
+            },
+            "PYTHONPATH": {
+                "value": "not set",
+                "description": "Python path"
+            },
+            "TORCH_HOME": {
+                "value": "not set",
+                "description": "PyTorch home directory"
+            },
+            "AI_CODEHUB_ENV": {
+                "value": "test",
+                "description": "AI CodeHub environment"
+            }
+        }
+    }
+}

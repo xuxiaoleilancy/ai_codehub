@@ -1,0 +1,9 @@
+Metadata-Version: 2.2
+Name: ai_codehub
+Version: 0.1.0
+Requires-Python: >=3.8
+Requires-Dist: torch
+Requires-Dist: numpy
+Requires-Dist: pytest
+Dynamic: requires-dist
+Dynamic: requires-python

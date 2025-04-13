@@ -1,0 +1,31 @@
+{
+    "timestamp": "20250413_092540",
+    "gpu_info": {
+        "cuda_available": true,
+        "cuda_version": "11.8",
+        "cudnn_version": 90100,
+        "device_count": 1,
+        "current_device": 0,
+        "device_name": "NVIDIA GeForce RTX 4060",
+        "compute_capability": [
+            8,
+            9
+        ]
+    },
+    "test_results": {
+        "operations": {
+            "addition": {
+                "time": 0.010997772216796875,
+                "success": true
+            },
+            "matrix_multiplication": {
+                "time": 0.0,
+                "success": true
+            },
+            "memory_management": {
+                "allocated_after_cleanup": 8970752,
+                "success": false
+            }
+        }
+    }
+}

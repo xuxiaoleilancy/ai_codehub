@@ -1,0 +1,148 @@
+
+        <!DOCTYPE html>
+        <html lang="zh">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>AI CodeHub 测试报告摘要</title>
+            <style>
+                body {
+                    font-family: "Microsoft YaHei", 'Arial, sans-serif';
+                    line-height: 1.6;
+                    margin: 0;
+                    padding: 20px;
+                    color: #333;
+                }
+                .container {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                }
+                h1, h2, h3 {
+                    color: #2c3e50;
+                }
+                .section {
+                    background: #f9f9f9;
+                    border-radius: 5px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                }
+                .test-result {
+                    margin: 10px 0;
+                    padding: 10px;
+                    border-left: 4px solid #3498db;
+                }
+                .success {
+                    border-left-color: #2ecc71;
+                }
+                .warning {
+                    border-left-color: #f1c40f;
+                }
+                .error {
+                    border-left-color: #e74c3c;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 10px 0;
+                }
+                th, td {
+                    padding: 12px;
+                    text-align: left;
+                    border-bottom: 1px solid #ddd;
+                }
+                th {
+                    background-color: #f2f2f2;
+                }
+                .timestamp {
+                    color: #7f8c8d;
+                    font-size: 0.9em;
+                }
+                .json-link {
+                    color: #3498db;
+                    text-decoration: none;
+                }
+                .json-link:hover {
+                    text-decoration: underline;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>AI CodeHub 测试报告摘要</h1>
+                <p class="timestamp">生成时间: 2025-04-13 09:40:33</p>
+                
+                <div class="section">
+                    <h2>系统环境信息</h2>
+                    <table>
+                        <tr>
+                            <th>项目</th>
+                            <th>值</th>
+                        </tr>
+                        <tr>
+                            <td>操作系统</td>
+                            <td>Windows-10-10.0.19045-SP0</td>
+                        </tr>
+                        <tr>
+                            <td>Python版本</td>
+                            <td>3.9.21 (main, Dec 11 2024, 16:35:24) [MSC v.1929 64 bit (AMD64)]</td>
+                        </tr>
+                        <tr>
+                            <td>处理器</td>
+                            <td>Intel64 Family 6 Model 151 Stepping 2, GenuineIntel</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>GPU信息</h2>
+                    <table>
+                        <tr>
+                            <th>项目</th>
+                            <th>值</th>
+                        </tr>
+                        <tr>
+                            <td>CUDA可用</td>
+                            <td>是</td>
+                        </tr>
+                        <tr>
+                            <td>CUDA版本</td>
+                            <td>11.8</td>
+                        </tr>
+                        <tr>
+                            <td>GPU数量</td>
+                            <td>1</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>测试结果</h2>
+                    <h3>GPU性能测试</h3>
+                    <table>
+                        <tr>
+                            <th>测试项目</th>
+                            <th>结果</th>
+                            <th>耗时(秒)</th>
+                        </tr>
+                        <tr>
+                            <td>矩阵加法</td>
+                            <td>成功</td>
+                            <td>0.001234</td>
+                        </tr>
+                        <tr>
+                            <td>矩阵乘法</td>
+                            <td>成功</td>
+                            <td>0.005678</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>详细报告链接</h2>
+                    <p><a href="reports\environment\environment_report_zh_20250413_094033.json" class="json-link">环境测试报告 (JSON)</a></p>
+                    <p><a href="reports\gpu\gpu_report_zh_20250413_094033.json" class="json-link">GPU测试报告 (JSON)</a></p>
+                </div>
+            </div>
+        </body>
+        </html>
+        
