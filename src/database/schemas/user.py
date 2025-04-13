@@ -1,14 +1,14 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, constr
 from typing import Optional
 
 class UserBase(BaseModel):
-    username: str
+    username: constr(min_length=3, max_length=50)
     email: Optional[EmailStr] = None
     is_active: Optional[bool] = True
     is_superuser: bool = False
 
 class UserCreate(UserBase):
-    password: str
+    password: constr(min_length=8)
 
 class UserInDB(UserBase):
     id: int

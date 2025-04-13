@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="projects">Projects - AI CodeHub</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        .projects-container {
+            margin-top: 2rem;
+        }
+        .card {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <section class="section">
+        <div class="container projects-container">
+            <div class="level">
+                <div class="level-left">
+                    <h1 class="title" data-i18n="projects">Projects</h1>
+                </div>
+                <div class="level-right">
+                    <button class="button is-primary" onclick="showCreateProjectModal()" data-i18n="create_project">
+                        Create Project
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table is-fullwidth is-striped">
+                    <thead>
+                        <tr>
+                            <th data-i18n="project_name">Project Name</th>
+                            <th data-i18n="project_description">Description</th>
+                            <th data-i18n="project_status">Status</th>
+                            <th data-i18n="project_actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectsTableBody">
+                        <!-- Projects will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Create Project Modal -->
+    <div class="modal" id="createProjectModal">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title" data-i18n="create_project">Create Project</p>
+                <button class="delete" aria-label="close" onclick="closeCreateProjectModal()"></button>
+            </header>
+            <section class="modal-card-body">
+                <form id="createProjectForm">
+                    <div class="field">
+                        <label class="label" data-i18n="project_name">Project Name</label>
+                        <div class="control">
+                            <input class="input" type="text" id="projectName" name="name" required 
+                                   data-i18n-placeholder="project_name">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" data-i18n="project_description">Description</label>
+                        <div class="control">
+                            <textarea class="textarea" id="projectDescription" name="description" 
+                                      data-i18n-placeholder="project_description"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-success" onclick="createProject()" data-i18n="create">Create</button>
+                <button class="button" onclick="closeCreateProjectModal()" data-i18n="cancel">Cancel</button>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/static/js/locales.js"></script>
+    <script src="/static/js/i18n.js"></script>
+    <script>
+        // Initialize i18n
+        i18n.init();
+
+        // Load navigation bar
+        fetch('/components/navbar.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('navbar-container').innerHTML = html;
+            })
+            .catch(error => console.error('Error loading navbar:', error));
+
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // Load projects
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/projects', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const projects = await response.json();
+                    const tableBody = document.getElementById('projectsTableBody');
+                    tableBody.innerHTML = '';
+
+                    if (projects.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="has-text-centered" data-i18n="no_projects">
+                                    No projects found
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        projects.forEach(project => {
+                            tableBody.innerHTML += `
+                                <tr>
+                                    <td>${project.name}</td>
+                                    <td>${project.description || ''}</td>
+                                    <td>${project.status}</td>
+                                    <td>
+                                        <div class="buttons">
+                                            <button class="button is-small is-info" onclick="editProject('${project.id}')" 
+                                                    data-i18n="edit">Edit</button>
+                                            <button class="button is-small is-danger" onclick="deleteProject('${project.id}')" 
+                                                    data-i18n="delete">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+                } else {
+                    alert(i18n.getText('error'));
+                }
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                alert(i18n.getText('error'));
+            }
+        }
+
+        // Modal functions
+        function showCreateProjectModal() {
+            document.getElementById('createProjectModal').classList.add('is-active');
+        }
+
+        function closeCreateProjectModal() {
+            document.getElementById('createProjectModal').classList.remove('is-active');
+        }
+
+        // Create project
+        async function createProject() {
+            const form = document.getElementById('createProjectForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert(i18n.getText('project_created'));
+                    closeCreateProjectModal();
+                    loadProjects();
+                } else {
+                    alert(i18n.getText('error'));
+                }
+            } catch (error) {
+                console.error('Error creating project:', error);
+                alert(i18n.getText('error'));
+            }
+        }
+
+        // Load projects on page load
+        loadProjects();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="login">Login - AI CodeHub</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        .login-container {
+            margin-top: 3rem;
+        }
+        .card {
+            box-shadow: 0 0.5em 1em -0.125em rgba(10,10,10,.1), 0 0 0 1px rgba(10,10,10,.02);
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <section class="section">
+        <div class="container login-container">
+            <div class="columns is-centered">
+                <div class="column is-4">
+                    <div class="card">
+                        <div class="card-content">
+                            <h1 class="title has-text-centered" data-i18n="login">Login</h1>
+                            <form id="loginForm">
+                                <div class="field">
+                                    <label class="label" data-i18n="username">Username</label>
+                                    <div class="control">
+                                        <input class="input" type="text" id="username" name="username" required 
+                                               data-i18n-placeholder="username">
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label" data-i18n="password">Password</label>
+                                    <div class="control">
+                                        <input class="input" type="password" id="password" name="password" required 
+                                               data-i18n-placeholder="password">
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <div class="control">
+                                        <button type="submit" class="button is-primary is-fullwidth" data-i18n="login">Login</button>
+                                    </div>
+                                </div>
+
+                                <div class="has-text-centered mt-4">
+                                    <p data-i18n="no_account">Don't have an account? <a href="/register" data-i18n="sign_up">Sign up</a></p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="/static/js/locales.js"></script>
+    <script src="/static/js/i18n.js"></script>
+    <script>
+        // Load navigation bar
+        fetch('/components/navbar.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('navbar-container').innerHTML = html;
+            })
+            .catch(error => console.error('Error loading navbar:', error));
+
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.access_token);
+                    window.location.href = '/models';
+                } else {
+                    alert(i18n.getText('login_failed'));
+                }
+            } catch (error) {
+                console.error('Error during login:', error);
+                alert(i18n.getText('login_error'));
+            }
+        });
+    </script>
+</body>
+</html> 

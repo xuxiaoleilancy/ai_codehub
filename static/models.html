@@ -3,102 +3,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Model Management - AI CodeHub</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/models.css">
+    <title data-i18n="models">Models - AI CodeHub</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        .navbar {
+            margin-bottom: 2rem;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .navbar-item {
+            padding: 0.5rem 1rem;
+        }
+        .model-card {
+            margin-bottom: 1rem;
+        }
+        .models-container {
+            margin-top: 2rem;
+        }
+        .card {
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>AI CodeHub - Model Management</h1>
-            <nav>
-                <a href="/" class="nav-link">Home</a>
-                <a href="/models" class="nav-link active">Models</a>
-                <button id="logoutBtn" class="btn">Logout</button>
-            </nav>
-        </header>
+    <!-- Include navigation bar -->
+    <div id="navbar-container"></div>
 
-        <main>
-            <section class="model-upload">
-                <h2>Upload Model</h2>
-                <form id="uploadForm" class="upload-form">
-                    <div class="form-group">
-                        <label for="modelName">Model Name</label>
-                        <input type="text" id="modelName" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="modelDescription">Description</label>
-                        <textarea id="modelDescription" name="description"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="modelVersion">Version</label>
-                        <input type="text" id="modelVersion" name="version" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="modelFramework">Framework</label>
-                        <select id="modelFramework" name="framework" required>
-                            <option value="pytorch">PyTorch</option>
-                            <option value="tensorflow">TensorFlow</option>
-                            <option value="onnx">ONNX</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="modelTaskType">Task Type</label>
-                        <select id="modelTaskType" name="task_type" required>
-                            <option value="classification">Classification</option>
-                            <option value="detection">Detection</option>
-                            <option value="segmentation">Segmentation</option>
-                            <option value="nlp">NLP</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="modelFile">Model File</label>
-                        <input type="file" id="modelFile" name="file" required>
-                    </div>
-                    <button type="submit" class="btn">Upload Model</button>
-                </form>
-            </section>
-
-            <section class="model-list">
-                <h2>Model List</h2>
-                <div class="filters">
-                    <input type="text" id="searchInput" placeholder="Search models...">
-                    <select id="frameworkFilter">
-                        <option value="">All Frameworks</option>
-                        <option value="pytorch">PyTorch</option>
-                        <option value="tensorflow">TensorFlow</option>
-                        <option value="onnx">ONNX</option>
-                        <option value="other">Other</option>
-                    </select>
-                    <select id="taskFilter">
-                        <option value="">All Tasks</option>
-                        <option value="classification">Classification</option>
-                        <option value="detection">Detection</option>
-                        <option value="segmentation">Segmentation</option>
-                        <option value="nlp">NLP</option>
-                        <option value="other">Other</option>
-                    </select>
+    <section class="section">
+        <div class="container models-container">
+            <div class="level">
+                <div class="level-left">
+                    <h1 class="title" data-i18n="models">Models</h1>
                 </div>
-                <div id="modelList" class="model-grid"></div>
-            </section>
-
-            <div id="modelModal" class="modal">
-                <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <h2>Model Details</h2>
-                    <div id="modelDetails"></div>
-                    <div class="modal-actions">
-                        <button id="updateModelBtn" class="btn">Update</button>
-                        <button id="deleteModelBtn" class="btn btn-danger">Delete</button>
-                    </div>
+                <div class="level-right">
+                    <button class="button is-primary" onclick="showCreateModelModal()" data-i18n="create_model">
+                        Create Model
+                    </button>
                 </div>
             </div>
-        </main>
+
+            <div class="table-container">
+                <table class="table is-fullwidth is-striped">
+                    <thead>
+                        <tr>
+                            <th data-i18n="model_name">Model Name</th>
+                            <th data-i18n="model_type">Model Type</th>
+                            <th data-i18n="model_version">Version</th>
+                            <th data-i18n="model_status">Status</th>
+                            <th data-i18n="model_actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modelsTableBody">
+                        <!-- Models will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Create Model Modal -->
+    <div class="modal" id="createModelModal">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title" data-i18n="create_model">Create Model</p>
+                <button class="delete" aria-label="close" onclick="closeCreateModelModal()"></button>
+            </header>
+            <section class="modal-card-body">
+                <form id="createModelForm">
+                    <div class="field">
+                        <label class="label" data-i18n="model_name">Model Name</label>
+                        <div class="control">
+                            <input class="input" type="text" id="modelName" name="name" required 
+                                   data-i18n-placeholder="model_name">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" data-i18n="model_type">Model Type</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="modelType" name="type" required>
+                                    <option value="classification" data-i18n="classification">Classification</option>
+                                    <option value="regression" data-i18n="regression">Regression</option>
+                                    <option value="generative" data-i18n="generative">Generative</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" data-i18n="model_version">Version</label>
+                        <div class="control">
+                            <input class="input" type="text" id="modelVersion" name="version" required 
+                                   data-i18n-placeholder="model_version">
+                        </div>
+                    </div>
+                </form>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-success" onclick="createModel()" data-i18n="create">Create</button>
+                <button class="button" onclick="closeCreateModelModal()" data-i18n="cancel">Cancel</button>
+            </footer>
+        </div>
     </div>
 
-    <script src="/static/js/models.js"></script>
+    <script src="/static/js/locales.js"></script>
+    <script src="/static/js/i18n.js"></script>
+    <script>
+        // Initialize i18n
+        i18n.init();
+
+        // Load navigation bar
+        fetch('/components/navbar.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('navbar-container').innerHTML = html;
+            })
+            .catch(error => console.error('Error loading navbar:', error));
+
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // Load models
+        async function loadModels() {
+            try {
+                const response = await fetch('/api/v1/models', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const models = await response.json();
+                    const tableBody = document.getElementById('modelsTableBody');
+                    tableBody.innerHTML = '';
+
+                    if (!models || models.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="has-text-centered" data-i18n="no_models">
+                                    暂无模型
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        models.forEach(model => {
+                            tableBody.innerHTML += `
+                                <tr>
+                                    <td>${model.name}</td>
+                                    <td>${model.type}</td>
+                                    <td>${model.version}</td>
+                                    <td>${model.status}</td>
+                                    <td>
+                                        <div class="buttons">
+                                            <button class="button is-small is-info" onclick="editModel('${model.id}')" 
+                                                    data-i18n="edit">编辑</button>
+                                            <button class="button is-small is-danger" onclick="deleteModel('${model.id}')" 
+                                                    data-i18n="delete">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+                } else {
+                    alert('加载模型列表失败');
+                }
+            } catch (error) {
+                console.error('加载模型时出错:', error);
+                alert('加载模型时出错');
+            }
+        }
+
+        // Modal functions
+        function showCreateModelModal() {
+            document.getElementById('createModelModal').classList.add('is-active');
+        }
+
+        function closeCreateModelModal() {
+            document.getElementById('createModelModal').classList.remove('is-active');
+        }
+
+        // Create model
+        async function createModel() {
+            const form = document.getElementById('createModelForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/v1/models/db/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeCreateModelModal();
+                    loadModels();
+                    alert('创建模型成功');
+                } else {
+                    alert('创建模型失败');
+                }
+            } catch (error) {
+                console.error('创建模型时出错:', error);
+                alert('创建模型时出错');
+            }
+        }
+
+        // Edit model
+        async function editModel(modelId) {
+            try {
+                const response = await fetch(`/api/v1/models/db/${modelId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const model = await response.json();
+                    // TODO: 实现编辑模型的逻辑
+                    alert('编辑模型功能待实现');
+                } else {
+                    alert('获取模型信息失败');
+                }
+            } catch (error) {
+                console.error('编辑模型时出错:', error);
+                alert('编辑模型时出错');
+            }
+        }
+
+        // Delete model
+        async function deleteModel(modelId) {
+            if (confirm('确定要删除这个模型吗？')) {
+                try {
+                    const response = await fetch(`/api/v1/models/db/${modelId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        loadModels();
+                        alert('删除模型成功');
+                    } else {
+                        alert('删除模型失败');
+                    }
+                } catch (error) {
+                    console.error('删除模型时出错:', error);
+                    alert('删除模型时出错');
+                }
+            }
+        }
+
+        // Load models on page load
+        loadModels();
+    </script>
 </body>
 </html> 
- 

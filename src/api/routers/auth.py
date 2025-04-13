@@ -23,7 +23,7 @@ router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 密码Bearer方案
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """验证密码"""
@@ -64,14 +64,18 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         raise credentials_exception
     return user
 
-@router.post("/token", response_model=Token)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+class LoginData(BaseModel):
+    username: str
+    password: str
+
+@router.post("/login", response_model=Token)
+async def login(
+    login_data: LoginData,
     db: Session = Depends(get_db),
 ) -> Any:
-    """登录获取访问令牌"""
-    user = db.query(User).filter(User.username == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    """用户登录"""
+    user = db.query(User).filter(User.username == login_data.username).first()
+    if not user or not verify_password(login_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="用户名或密码错误",
@@ -94,28 +98,43 @@ async def register_user(
     user_in: UserCreate,
 ) -> Any:
     """注册新用户"""
-    user = db.query(User).filter(User.username == user_in.username).first()
-    if user:
-        raise HTTPException(
-            status_code=400,
-            detail="用户名已存在",
+    try:
+        # 检查用户名是否已存在
+        user = db.query(User).filter(User.username == user_in.username).first()
+        if user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="用户名已存在"
+            )
+        
+        # 检查邮箱是否已存在
+        if user_in.email:
+            user = db.query(User).filter(User.email == user_in.email).first()
+            if user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="邮箱已被注册"
+                )
+        
+        # 创建新用户
+        hashed_password = get_password_hash(user_in.password)
+        db_user = User(
+            username=user_in.username,
+            email=user_in.email,
+            hashed_password=hashed_password,
+            is_active=True,
+            is_superuser=False
         )
-    user = db.query(User).filter(User.email == user_in.email).first()
-    if user:
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    except Exception as e:
+        db.rollback()
         raise HTTPException(
-            status_code=400,
-            detail="邮箱已被注册",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
         )
-    user = User(
-        username=user_in.username,
-        email=user_in.email,
-        hashed_password=get_password_hash(user_in.password),
-        is_superuser=user_in.is_superuser,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
 
 @router.get("/me", response_model=UserInDB)
 async def read_users_me(

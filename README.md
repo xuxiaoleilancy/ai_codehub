@@ -1,48 +1,35 @@
 # AI CodeHub
 
-A platform for managing and sharing AI-related code and projects.
+AI CodeHub is a structured platform for managing and sharing AI-related code and projects.
 
 ## Features
 
-- Model Management
-  - Upload and manage AI models
-  - Version control for models
-  - Model metadata management
-  - GPU support for model operations
-
-- User Authentication
+- User Authentication & Authorization
   - User registration and login
-  - Token-based authentication
-  - User profile management
-  - Role-based access control
+  - JWT token authentication
+  - Role-based access control (User/Superuser)
 
-- Modern Web Interface
-  - Responsive design
-  - User-friendly forms
-  - Real-time feedback
-  - Clean and modern UI
+- Project Management
+  - Create and manage projects
+  - Project descriptions and metadata
+  - Project access control
 
-## Project Structure
+- Model Management
+  - Model upload and version control
+  - Model metadata management
+  - Support for multiple model types (Classification/Regression/Generative)
+  - Model status tracking (Draft/Training/Ready/Error)
 
-```
-ai_codehub/
-├── config/             # Configuration files
-├── docs/              # Documentation
-├── examples/          # Example code and usage
-├── reports/           # Test and environment reports
-├── scripts/           # Utility scripts
-├── src/               # Source code
-│   ├── api/           # API endpoints
-│   ├── core/          # Core functionality
-│   ├── database/      # Database models and schemas
-│   └── models/        # Model management
-├── static/            # Frontend assets
-│   ├── css/          # Stylesheets
-│   ├── js/           # JavaScript files
-│   └── index.html    # Main HTML page
-├── tests/             # Test files
-└── requirements.txt   # Python dependencies
-```
+- GPU Support
+  - CUDA device detection
+  - GPU memory management
+  - Model GPU acceleration
+
+- Testing and Reporting
+  - Environment testing
+  - GPU detection tests
+  - HTML and JSON format test reports
+  - Automated testing framework
 
 ## Quick Start
 
@@ -57,71 +44,68 @@ cd ai_codehub
 pip install -r requirements.txt
 ```
 
-3. Start the server:
+3. Initialize the database:
 ```bash
-python -m uvicorn src.main:app --reload
+python -m src.database.init_db
 ```
 
-4. Open your browser and visit:
-```
-http://localhost:8000
-```
-
-## Authentication
-
-The platform uses JWT (JSON Web Tokens) for authentication. To use the API:
-
-1. Register a new user:
+4. Start the server:
 ```bash
-curl -X POST "http://localhost:8000/api/auth/register" \
-     -H "Content-Type: application/json" \
-     -d '{"username": "user", "email": "user@example.com", "password": "password"}'
+uvicorn src.main:app --reload
 ```
 
-2. Login to get access token:
-```bash
-curl -X POST "http://localhost:8000/api/auth/token" \
-     -H "Content-Type: application/x-www-form-urlencoded" \
-     -d "username=user&password=password"
-```
+5. Access the application:
+- Open your browser and visit http://localhost:8000
+- Default superuser credentials:
+  - Username: admin
+  - Password: admin123
 
-3. Use the token in subsequent requests:
-```bash
-curl -X GET "http://localhost:8000/api/auth/me" \
-     -H "Authorization: Bearer your_access_token"
-```
+## API Documentation
 
-## GPU Support
+After starting the server, view the API documentation at:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-The platform automatically detects and utilizes available GPU resources for model operations. To check GPU status:
+Main API endpoints:
+- `/api/auth/*` - Authentication related
+- `/api/v1/models/*` - Model management
+- `/api/projects/*` - Project management
 
-1. Run the environment tests:
-```bash
-python -m pytest tests/test_environment.py -v
-```
+## System Requirements
 
-2. Check the generated reports in the `reports/` directory
+- Python 3.8 or higher
+- SQLite 3
+- CUDA toolkit (optional, for GPU support)
+- Other dependencies in requirements.txt
 
 ## Testing
 
-Run the test suite:
+Run tests:
 ```bash
 python -m pytest tests/ -v
 ```
 
-Test reports will be generated in the `reports/` directory, including:
-- Environment test results
-- GPU detection results
-- Test coverage reports
+Test reports are located in the `reports/` directory:
+- `reports/environment/` - Environment test reports
+- `reports/gpu/` - GPU test reports
+- `reports/summary.html` - Test summary report
 
-## Requirements
+## Directory Structure
 
-- Python 3.8 or higher
-- FastAPI
-- SQLAlchemy
-- PyTorch (for GPU support)
-- Modern web browser
+```
+ai_codehub/
+├── src/
+│   ├── api/            - API routes and handlers
+│   ├── core/           - Core functionality and config
+│   ├── database/       - Database models and config
+│   ├── models/         - Model management code
+│   └── static/         - Static files
+├── tests/              - Test code
+├── reports/            - Test reports
+├── requirements.txt    - Project dependencies
+└── README.md          - Project documentation
+```
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

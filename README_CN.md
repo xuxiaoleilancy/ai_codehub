@@ -1,48 +1,35 @@
 # AI CodeHub
 
-AI 代码管理与共享平台
+AI CodeHub 是一个用于管理和共享 AI 相关代码和项目的结构化平台。
 
 ## 功能特点
 
-- 模型管理
-  - 上传和管理 AI 模型
-  - 模型版本控制
-  - 模型元数据管理
-  - GPU 支持模型操作
-
-- 用户认证
+- 用户认证和授权
   - 用户注册和登录
-  - 基于令牌的身份验证
-  - 用户资料管理
-  - 基于角色的访问控制
+  - JWT token 认证
+  - 角色权限管理（普通用户/超级用户）
 
-- 现代化 Web 界面
-  - 响应式设计
-  - 用户友好的表单
-  - 实时反馈
-  - 清晰现代的 UI
+- 项目管理
+  - 创建和管理项目
+  - 项目描述和元数据
+  - 项目访问控制
 
-## 项目结构
+- 模型管理
+  - 模型上传和版本控制
+  - 模型元数据管理
+  - 支持多种模型类型（分类/回归/生成式）
+  - 模型状态跟踪（草稿/训练中/就绪/错误）
 
-```
-ai_codehub/
-├── config/             # 配置文件
-├── docs/              # 文档
-├── examples/          # 示例代码和用法
-├── reports/           # 测试和环境报告
-├── scripts/           # 实用脚本
-├── src/               # 源代码
-│   ├── api/           # API 端点
-│   ├── core/          # 核心功能
-│   ├── database/      # 数据库模型和架构
-│   └── models/        # 模型管理
-├── static/            # 前端资源
-│   ├── css/          # 样式表
-│   ├── js/           # JavaScript 文件
-│   └── index.html    # 主 HTML 页面
-├── tests/             # 测试文件
-└── requirements.txt   # Python 依赖
-```
+- GPU 支持
+  - CUDA 设备检测
+  - GPU 内存管理
+  - 模型 GPU 加速
+
+- 测试和报告
+  - 环境测试
+  - GPU 检测测试
+  - HTML 和 JSON 格式的测试报告
+  - 自动化测试框架
 
 ## 快速开始
 
@@ -57,71 +44,68 @@ cd ai_codehub
 pip install -r requirements.txt
 ```
 
-3. 启动服务器：
+3. 初始化数据库：
 ```bash
-python -m uvicorn src.main:app --reload
+python -m src.database.init_db
 ```
 
-4. 打开浏览器访问：
-```
-http://localhost:8000
-```
-
-## 身份认证
-
-平台使用 JWT（JSON Web Tokens）进行身份认证。使用 API：
-
-1. 注册新用户：
+4. 启动服务器：
 ```bash
-curl -X POST "http://localhost:8000/api/auth/register" \
-     -H "Content-Type: application/json" \
-     -d '{"username": "user", "email": "user@example.com", "password": "password"}'
+uvicorn src.main:app --reload
 ```
 
-2. 登录获取访问令牌：
-```bash
-curl -X POST "http://localhost:8000/api/auth/token" \
-     -H "Content-Type: application/x-www-form-urlencoded" \
-     -d "username=user&password=password"
-```
+5. 访问应用：
+- 打开浏览器访问 http://localhost:8000
+- 默认超级用户账号：
+  - 用户名：admin
+  - 密码：admin123
 
-3. 在后续请求中使用令牌：
-```bash
-curl -X GET "http://localhost:8000/api/auth/me" \
-     -H "Authorization: Bearer your_access_token"
-```
+## API 文档
 
-## GPU 支持
+启动服务器后，访问以下地址查看 API 文档：
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-平台自动检测并利用可用的 GPU 资源进行模型操作。检查 GPU 状态：
-
-1. 运行环境测试：
-```bash
-python -m pytest tests/test_environment.py -v
-```
-
-2. 在 `reports/` 目录中查看生成的报告
-
-## 测试
-
-运行测试套件：
-```bash
-python -m pytest tests/ -v
-```
-
-测试报告将生成在 `reports/` 目录中，包括：
-- 环境测试结果
-- GPU 检测结果
-- 测试覆盖率报告
+主要 API 端点：
+- `/api/auth/*` - 认证相关
+- `/api/v1/models/*` - 模型管理
+- `/api/projects/*` - 项目管理
 
 ## 系统要求
 
 - Python 3.8 或更高版本
-- FastAPI
-- SQLAlchemy
-- PyTorch（用于 GPU 支持）
-- 现代网络浏览器
+- SQLite 3
+- CUDA 工具包（可选，用于 GPU 支持）
+- 其他依赖见 requirements.txt
+
+## 测试
+
+运行测试：
+```bash
+python -m pytest tests/ -v
+```
+
+测试报告位于 `reports/` 目录：
+- `reports/environment/` - 环境测试报告
+- `reports/gpu/` - GPU 测试报告
+- `reports/summary.html` - 测试总结报告
+
+## 目录结构
+
+```
+ai_codehub/
+├── src/
+│   ├── api/            - API 路由和处理器
+│   ├── core/           - 核心功能和配置
+│   ├── database/       - 数据库模型和配置
+│   ├── models/         - 模型管理相关代码
+│   └── static/         - 静态文件
+├── tests/              - 测试代码
+├── reports/            - 测试报告
+├── requirements.txt    - 项目依赖
+└── README.md          - 项目文档
+```
 
 ## 许可证
 
-本项目采用 MIT 许可证 - 详见 LICENSE 文件 
+本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。 

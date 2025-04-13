@@ -3,63 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI CodeHub</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <title>AI CodeHub - Your AI Code Management Platform</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #4a90e2, #7c4dff);
+            color: white;
+        }
+        .feature-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .feature-card .card-content {
+            flex-grow: 1;
+        }
+        .section {
+            padding: 3rem 1.5rem;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>AI CodeHub</h1>
-            <p>A platform for managing and sharing AI-related code and projects</p>
-        </header>
+    <div id="navbar-container"></div>
 
-        <div class="auth-container">
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="login">Login</button>
-                <button class="tab-btn" data-tab="register">Register</button>
-            </div>
-
-            <div class="tab-content">
-                <div id="login" class="tab-pane active">
-                    <form id="loginForm" class="auth-form">
-                        <div class="form-group">
-                            <label for="loginUsername">Username</label>
-                            <input type="text" id="loginUsername" name="username" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="loginPassword">Password</label>
-                            <input type="password" id="loginPassword" name="password" required>
-                        </div>
-                        <button type="submit" class="btn">Login</button>
-                    </form>
-                </div>
-
-                <div id="register" class="tab-pane">
-                    <form id="registerForm" class="auth-form">
-                        <div class="form-group">
-                            <label for="registerUsername">Username</label>
-                            <input type="text" id="registerUsername" name="username" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="registerEmail">Email</label>
-                            <input type="email" id="registerEmail" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="registerPassword">Password</label>
-                            <input type="password" id="registerPassword" name="password" required>
-                        </div>
-                        <button type="submit" class="btn">Register</button>
-                    </form>
+    <!-- Hero Section -->
+    <section class="hero is-medium">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title is-1 has-text-white">
+                    Welcome to AI CodeHub
+                </h1>
+                <h2 class="subtitle is-3 has-text-white">
+                    Your One-Stop Platform for AI Model Management and Deployment
+                </h2>
+                <div class="buttons">
+                    <a href="/models" class="button is-primary is-large">Explore Models</a>
+                    <a href="/register" class="button is-light is-large">Get Started</a>
                 </div>
             </div>
         </div>
+    </section>
 
-        <div id="userInfo" class="user-info" style="display: none;">
-            <h2>Welcome, <span id="username"></span>!</h2>
-            <button id="logoutBtn" class="btn">Logout</button>
+    <!-- Features Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="title has-text-centered mb-6">Key Features</h2>
+            <div class="columns">
+                <div class="column is-4">
+                    <div class="card feature-card">
+                        <div class="card-content">
+                            <h3 class="title is-4">Model Management</h3>
+                            <p class="content">
+                                Easily upload, version, and manage your AI models in one centralized location.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="card feature-card">
+                        <div class="card-content">
+                            <h3 class="title is-4">Deployment Tools</h3>
+                            <p class="content">
+                                Deploy your models with just a few clicks using our streamlined deployment tools.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="card feature-card">
+                        <div class="card-content">
+                            <h3 class="title is-4">Collaboration</h3>
+                            <p class="content">
+                                Work together with your team, share models, and manage access controls.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <script src="/static/js/main.js"></script>
+    <!-- Getting Started Section -->
+    <section class="section has-background-light">
+        <div class="container">
+            <h2 class="title has-text-centered mb-6">Getting Started</h2>
+            <div class="columns is-centered">
+                <div class="column is-8">
+                    <div class="content has-text-centered">
+                        <p class="is-size-5">
+                            Start managing your AI models in three simple steps:
+                        </p>
+                        <ol class="is-size-5">
+                            <li>Create an account</li>
+                            <li>Upload your first model</li>
+                            <li>Deploy and share with your team</li>
+                        </ol>
+                        <div class="buttons is-centered mt-5">
+                            <a href="/register" class="button is-primary is-medium">Create Account</a>
+                            <a href="/docs" class="button is-link is-medium">View Documentation</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Load navigation bar
+        fetch('/components/navbar.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('navbar-container').innerHTML = html;
+            })
+            .catch(error => console.error('Error loading navbar:', error));
+    </script>
 </body>
 </html> 

@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     USE_GPU: bool = True
     CUDA_VISIBLE_DEVICES: Optional[str] = None
     
+    # 超级用户配置
+    FIRST_SUPERUSER: str = "admin"
+    FIRST_SUPERUSER_EMAIL: str = "admin@example.com"
+    FIRST_SUPERUSER_PASSWORD: str = "admin123"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

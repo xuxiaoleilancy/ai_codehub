@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fastapi.responses import JSONResponse
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from datetime import datetime
 from sqlalchemy.orm import Session
@@ -8,8 +8,9 @@ import os
 import json
 
 from src.core.security import get_current_active_user
-from src.database import get_db
-from src.database.models.user import User
+from src.database import get_db, Model, User
+from src.database.schemas.model import ModelCreate, ModelUpdate, ModelInDB
+from src.database.models.model import ModelType, ModelStatus
 from src.models.model_manager import ModelManager
 
 router = APIRouter()
@@ -82,13 +83,13 @@ async def list_models(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{model_name}", response_model=ModelMetadata)
-async def get_model(
+@router.get("/{model_name}/metadata", response_model=ModelMetadata)
+async def get_model_metadata(
     model_name: str,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """获取模型详情"""
+    """获取模型元数据"""
     try:
         model_manager = ModelManager()
         model = model_manager.get_model_metadata(model_name)
@@ -121,14 +122,14 @@ async def delete_model(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/{model_name}")
-async def update_model(
+async def update_model_metadata(
     model_name: str,
     description: Optional[str] = Form(None),
     version: Optional[str] = Form(None),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """更新模型信息"""
+    """更新模型元数据"""
     try:
         model_manager = ModelManager()
         model = model_manager.get_model_metadata(model_name)
@@ -148,32 +149,108 @@ async def update_model(
         model_manager.update_model_metadata(model_name, updates)
         return {"message": "Model updated successfully"}
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/db/list", response_model=List[ModelInDB])
+async def get_db_models(
+    current_user: dict = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """获取数据库中的模型列表"""
+    user = db.query(User).filter(User.username == current_user["username"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    return db.query(Model).filter(Model.owner_id == user.id).all()
+
+@router.get("/db/{model_id}", response_model=ModelInDB)
+async def get_db_model(
+    model_id: int,
+    current_user: dict = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """获取数据库中的单个模型"""
+    user = db.query(User).filter(User.username == current_user["username"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    
+    model = db.query(Model).filter(Model.id == model_id, Model.owner_id == user.id).first()
+    if not model:
+        raise HTTPException(status_code=404, detail="模型不存在")
+    return model
+
+@router.post("/db/create", response_model=ModelInDB)
+async def create_db_model(
+    model_in: ModelCreate,
+    current_user: dict = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """在数据库中创建新模型"""
+    user = db.query(User).filter(User.username == current_user["username"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    
+    db_model = Model(
+        **model_in.dict(),
+        owner_id=user.id,
+        status=ModelStatus.DRAFT
+    )
+    db.add(db_model)
+    db.commit()
+    db.refresh(db_model)
+    return db_model
+
+@router.put("/db/{model_id}", response_model=ModelInDB)
+async def update_db_model(
+    model_id: int,
+    model_in: ModelUpdate,
+    current_user: dict = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """更新数据库中的模型"""
+    user = db.query(User).filter(User.username == current_user["username"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    
+    model = db.query(Model).filter(Model.id == model_id, Model.owner_id == user.id).first()
+    if not model:
+        raise HTTPException(status_code=404, detail="模型不存在")
+    
+    for field, value in model_in.dict(exclude_unset=True).items():
+        setattr(model, field, value)
+    
+    db.commit()
+    db.refresh(model)
+    return model
+
+@router.delete("/db/{model_id}")
+async def delete_db_model(
+    model_id: int,
+    current_user: dict = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """从数据库中删除模型"""
+    user = db.query(User).filter(User.username == current_user["username"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    
+    model = db.query(Model).filter(Model.id == model_id, Model.owner_id == user.id).first()
+    if not model:
+        raise HTTPException(status_code=404, detail="模型不存在")
+    
+    db.delete(model)
+    db.commit()
+    return {"message": "模型已删除"}
+
+@router.get("/models", response_model=List[ModelInDB])
+async def get_models(
+    current_user: Dict[str, Any] = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """获取模型列表"""
+    try:
+        user = db.query(User).filter(User.username == current_user["username"]).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="用户不存在")
+        return db.query(Model).filter(Model.owner_id == user.id).all()
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
-@router.get("/", response_model=List[str])
-async def list_models():
-    """List all available models"""
-    model_manager = ModelManager()
-    return model_manager.list_models()
-
-@router.get("/{model_name}/metadata", response_model=ModelMetadata)
-async def get_model_metadata(model_name: str):
-    """Get metadata for a specific model"""
-    model_manager = ModelManager()
-    metadata = model_manager.get_model_metadata(model_name)
-    if not metadata:
-        raise HTTPException(status_code=404, detail=f"Model {model_name} not found")
-    return metadata
-
-@router.post("/{model_name}/save")
-async def save_model(model_name: str, metadata: ModelMetadata):
-    """Save a model with metadata"""
-    # This is a placeholder - in a real implementation, you would handle the model file upload
-    # and actual model saving logic here
-    return {"message": f"Model {model_name} saved successfully"}
-
-@router.get("/{model_name}/load")
-async def load_model(model_name: str):
-    """Load a specific model"""
-    # This is a placeholder - in a real implementation, you would handle the model loading
-    # and return appropriate response
-    return {"message": f"Model {model_name} loaded successfully"} 
