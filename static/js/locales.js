@@ -80,7 +80,32 @@ const locales = {
         gpu_acceleration: 'GPU Acceleration Example',
         basic: 'Basic',
         performance: 'Performance',
-        optimization: 'Optimization'
+        optimization: 'Optimization',
+        
+        // New additions
+        navbar_load_error: 'Failed to load navigation bar. Please refresh the page.',
+        welcome: 'Welcome to AI CodeHub',
+        explore_models: 'Explore Models',
+        get_started: 'Get Started',
+        key_features: 'Key Features',
+        model_management: 'Model Management',
+        model_management_desc: 'Easily upload, version, and manage your AI models in one centralized location.',
+        deployment_tools: 'Deployment Tools',
+        deployment_tools_desc: 'Deploy your models with just a few clicks using our streamlined deployment tools.',
+        collaboration: 'Collaboration',
+        collaboration_desc: 'Work together with your team, share models, and manage access controls.',
+        register_now: 'Register Now',
+        create_project: 'Create Project',
+        view_examples: 'View Examples',
+        
+        // Project creation page
+        project_name: 'Project Name',
+        project_description: 'Project Description',
+        select_model: 'Select Model',
+        select_model_placeholder: 'Please select a model',
+        environment: 'Environment',
+        use_gpu: 'Use GPU',
+        create: 'Create'
     },
     zh: {
         // Common
@@ -163,6 +188,31 @@ const locales = {
         gpu_acceleration: 'GPU加速示例',
         basic: '基础',
         performance: '性能',
-        optimization: '优化'
+        optimization: '优化',
+        
+        // New additions
+        navbar_load_error: '导航栏加载失败，请刷新页面重试',
+        welcome: '欢迎使用 AI CodeHub',
+        explore_models: '浏览模型',
+        get_started: '开始使用',
+        key_features: '主要功能',
+        model_management: '模型管理',
+        model_management_desc: '轻松上传、版本控制和集中管理您的 AI 模型',
+        deployment_tools: '部署工具',
+        deployment_tools_desc: '使用我们简化的部署工具，只需点击几下即可部署模型',
+        collaboration: '协作功能',
+        collaboration_desc: '与团队协作，共享模型，管理访问控制',
+        register_now: '立即注册',
+        create_project: '创建项目',
+        view_examples: '查看示例',
+        
+        // Project creation page
+        project_name: '项目名称',
+        project_description: '项目描述',
+        select_model: '选择模型',
+        select_model_placeholder: '请选择模型',
+        environment: '环境配置',
+        use_gpu: '使用 GPU',
+        create: '创建'
     }
 }; 

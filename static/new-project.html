@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <title data-i18n="create_project">创建新项目</title>
+    <style>
+        .section {
+            padding: 3rem 1.5rem;
+        }
+        .navbar {
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <section class="section">
+        <div class="container">
+            <h1 class="title is-2 has-text-centered" data-i18n="create_project">创建新项目</h1>
+            
+            <div class="columns is-centered">
+                <div class="column is-8">
+                    <form id="project-form" class="box">
+                        <!-- 项目名称 -->
+                        <div class="field">
+                            <label class="label" data-i18n="project_name">项目名称</label>
+                            <div class="control">
+                                <input class="input" type="text" id="name" name="name" required>
+                            </div>
+                        </div>
+
+                        <!-- 项目描述 -->
+                        <div class="field">
+                            <label class="label" data-i18n="project_description">项目描述</label>
+                            <div class="control">
+                                <textarea class="textarea" id="description" name="description" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- 模型选择 -->
+                        <div class="field">
+                            <label class="label" data-i18n="select_model">选择模型</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select id="model" name="model" required>
+                                        <option value="" data-i18n="select_model_placeholder">请选择模型</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 环境配置 -->
+                        <div class="field">
+                            <label class="label" data-i18n="environment">环境配置</label>
+                            <div class="control">
+                                <label class="checkbox">
+                                    <input type="checkbox" id="use_gpu" name="use_gpu">
+                                    <span data-i18n="use_gpu">使用 GPU</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 提交按钮 -->
+                        <div class="field">
+                            <div class="control">
+                                <button type="submit" class="button is-primary is-fullwidth" data-i18n="create">
+                                    创建项目
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // 加载导航栏
+        document.addEventListener('DOMContentLoaded', async () => {
+            const navbarContainer = document.getElementById('navbar-container');
+            if (navbarContainer) {
+                try {
+                    // 显示加载状态
+                    navbarContainer.innerHTML = `
+                        <div class="has-text-centered">
+                            <span class="icon is-medium">
+                                <i class="fas fa-spinner fa-pulse"></i>
+                            </span>
+                            <span data-i18n="loading">加载中...</span>
+                        </div>
+                    `;
+                    
+                    const response = await fetch('/components/navbar.html');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const html = await response.text();
+                    navbarContainer.innerHTML = html;
+                    
+                    // 初始化语言
+                    const savedLang = localStorage.getItem('language') || 'zh';
+                    document.documentElement.lang = savedLang;
+                    updateTranslations(savedLang);
+                    
+                    // 监听语言切换
+                    document.addEventListener('languageChanged', (event) => {
+                        updateTranslations(event.detail.language);
+                    });
+
+                    // 加载可用模型列表
+                    loadModels();
+                } catch (error) {
+                    console.error('Error loading navbar:', error);
+                    navbarContainer.innerHTML = `
+                        <div class="notification is-warning">
+                            <button class="delete"></button>
+                            <p data-i18n="navbar_load_error">导航栏加载失败，请刷新页面重试</p>
+                        </div>
+                    `;
+                    navbarContainer.querySelector('.delete')?.addEventListener('click', () => {
+                        navbarContainer.innerHTML = '';
+                    });
+                }
+            }
+        });
+
+        // 加载可用模型列表
+        async function loadModels() {
+            try {
+                const response = await fetch('/api/v1/models/');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const models = await response.json();
+                const select = document.getElementById('model');
+                
+                models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model.id;
+                    option.textContent = model.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading models:', error);
+            }
+        }
+
+        // 表单提交处理
+        document.getElementById('project-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                description: document.getElementById('description').value,
+                model_id: document.getElementById('model').value,
+                use_gpu: document.getElementById('use_gpu').checked
+            };
+
+            try {
+                const response = await fetch('/api/projects/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                window.location.href = `/projects/${result.id}`;
+            } catch (error) {
+                console.error('Error creating project:', error);
+                alert('创建项目失败，请重试');
+            }
+        });
+    </script>
+</body>
+</html> 

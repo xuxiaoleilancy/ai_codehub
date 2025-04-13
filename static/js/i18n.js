@@ -47,11 +47,38 @@ const i18n = {
     }
 }; 
 
+// 更新页面上的翻译
+function updateTranslations(lang) {
+    const translations = window.translations || {};
+    const elements = document.querySelectorAll('[data-i18n]');
+    
+    elements.forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (translations[lang] && translations[lang][key]) {
+            if (element.tagName.toLowerCase() === 'input' && element.type === 'text') {
+                element.placeholder = translations[lang][key];
+            } else {
+                element.textContent = translations[lang][key];
+            }
+        }
+    });
+
+    // 更新页面语言
+    document.documentElement.lang = lang;
+    localStorage.setItem('language', lang);
+}
+
+// 切换语言
+function switchLanguage(lang) {
+    // 触发语言改变事件
+    const event = new CustomEvent('languageChanged', {
+        detail: { language: lang }
+    });
+    document.dispatchEvent(event);
+}
+
 // 初始化语言
-function initLanguage() {
-    const savedLang = localStorage.getItem('language');
-    if (!savedLang) {
-        localStorage.setItem('language', 'cn');  // 默认设置为中文
-    }
-    updateTranslations(localStorage.getItem('language') || 'cn');
-} 
+document.addEventListener('DOMContentLoaded', () => {
+    const savedLang = localStorage.getItem('language') || 'zh';
+    updateTranslations(savedLang);
+}); 
