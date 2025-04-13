@@ -109,3 +109,56 @@ ai_codehub/
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Project Structure
+
+```
+ai_codehub/
+├── src/                    # Source code
+│   ├── api/               # API endpoints
+│   ├── core/              # Core functionality
+│   ├── database/          # Database models and operations
+│   ├── models/            # AI model implementations
+│   └── utils/             # Utility functions
+├── tests/                 # Test cases
+├── scripts/               # Utility scripts
+├── config/                # Configuration files
+├── docs/                  # Documentation
+└── static/                # Static files (HTML, CSS, JS)
+```
+
+## Database Models
+
+The project uses SQLAlchemy ORM with the following main models:
+
+### User Model
+- **id**: Integer (Primary Key)
+- **username**: String (Unique)
+- **email**: String (Unique)
+- **hashed_password**: String
+- **is_active**: Boolean
+- **is_superuser**: Boolean
+- **created_at**: DateTime
+- **updated_at**: DateTime
+- **projects**: Relationship with Project model
+
+### Project Model
+- **id**: Integer (Primary Key)
+- **name**: String
+- **description**: Text
+- **owner_id**: Integer (Foreign Key to User)
+- **created_at**: DateTime
+- **updated_at**: DateTime
+- **owner**: Relationship with User model
+- **models**: Relationship with Model model
+
+### Model Model
+- **id**: Integer (Primary Key)
+- **name**: String
+- **description**: Text
+- **project_id**: Integer (Foreign Key to Project)
+- **model_type**: String
+- **model_path**: String
+- **created_at**: DateTime
+- **updated_at**: DateTime
+- **project**: Relationship with Project model

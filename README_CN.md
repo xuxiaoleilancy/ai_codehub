@@ -108,4 +108,57 @@ ai_codehub/
 
 ## 许可证
 
-本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。 
+本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
+
+## 项目结构
+
+```
+ai_codehub/
+├── src/                    # 源代码
+│   ├── api/               # API 接口
+│   ├── core/              # 核心功能
+│   ├── database/          # 数据库模型和操作
+│   ├── models/            # AI 模型实现
+│   └── utils/             # 工具函数
+├── tests/                 # 测试用例
+├── scripts/               # 工具脚本
+├── config/                # 配置文件
+├── docs/                  # 文档
+└── static/                # 静态文件 (HTML, CSS, JS)
+```
+
+## 数据库模型
+
+项目使用 SQLAlchemy ORM，包含以下主要模型：
+
+### 用户模型 (User)
+- **id**: 整数 (主键)
+- **username**: 字符串 (唯一)
+- **email**: 字符串 (唯一)
+- **hashed_password**: 字符串
+- **is_active**: 布尔值
+- **is_superuser**: 布尔值
+- **created_at**: 日期时间
+- **updated_at**: 日期时间
+- **projects**: 与项目模型的关系
+
+### 项目模型 (Project)
+- **id**: 整数 (主键)
+- **name**: 字符串
+- **description**: 文本
+- **owner_id**: 整数 (外键关联用户)
+- **created_at**: 日期时间
+- **updated_at**: 日期时间
+- **owner**: 与用户模型的关系
+- **models**: 与模型模型的关系
+
+### 模型模型 (Model)
+- **id**: 整数 (主键)
+- **name**: 字符串
+- **description**: 文本
+- **project_id**: 整数 (外键关联项目)
+- **model_type**: 字符串
+- **model_path**: 字符串
+- **created_at**: 日期时间
+- **updated_at**: 日期时间
+- **project**: 与项目模型的关系 
