@@ -1,7 +1,5 @@
-# 启动FastAPI应用程序
-Write-Output "Starting AI CodeHub application..."
+# 设置环境变量
 $env:PYTHONPATH = "."
-$env:AI_CODEHUB_HOST = "localhost"
-$env:AI_CODEHUB_PORT = "8000"
-python -c "from config.config import settings; print(f'Starting server on {settings.HOST}:{settings.PORT}')"
-python -m uvicorn src.main:app --reload --host localhost --port 8000 
+
+# 启动应用
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000 

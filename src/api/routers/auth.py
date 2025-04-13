@@ -14,9 +14,8 @@ from src.core.security import (
     get_password_hash,
     verify_password,
 )
-from src.db.session import get_db
-from src.models.user import User
-from src.schemas.user import UserCreate, UserInDB, Token, TokenData
+from src.database import get_db, User
+from src.database.schemas.user import UserCreate, UserInDB, Token, TokenData
 
 router = APIRouter()
 

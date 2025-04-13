@@ -1,7 +1,6 @@
 @echo off
-echo Starting AI CodeHub application...
+REM 设置环境变量
 set PYTHONPATH=.
-set AI_CODEHUB_HOST=localhost
-set AI_CODEHUB_PORT=8000
-python -c "from config.config import settings; print(f'Starting server on {settings.HOST}:{settings.PORT}')"
-python -m uvicorn src.main:app --reload --host localhost --port 8000 
+
+REM 启动应用
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000 
