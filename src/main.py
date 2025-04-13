@@ -13,6 +13,7 @@ from src.core.config import settings
 from src.api.routers import auth_router
 from src.api.routers.model_router import router as model_router
 from src.api.routers.project_router import router as project_router
+from src.api.routers.example_router import router as example_router
 from src.database import Base, engine, SessionLocal
 from src.core.security import (
     create_access_token,
@@ -45,6 +46,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(model_router, prefix="/api/v1/models", tags=["models"])
 app.include_router(project_router, prefix="/api/projects", tags=["projects"])
+app.include_router(example_router, prefix="/api/v1", tags=["examples"])
 
 # Mount static files directory
 static_dir = Path(__file__).parent.parent / "static"
@@ -85,6 +87,10 @@ async def read_register_page():
 @app.get("/projects")
 async def read_projects_page():
     return FileResponse(str(static_dir / "projects.html"))
+
+@app.get("/examples")
+async def read_examples_page():
+    return FileResponse(str(static_dir / "examples.html"))
 
 @app.get(f"{settings.API_V1_STR}/health")
 async def health_check():

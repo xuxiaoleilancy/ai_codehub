@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
     
+    # 服务器配置
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    
     # 数据库配置
     DATABASE_URL: str = "sqlite:///./ai_codehub.db"
     

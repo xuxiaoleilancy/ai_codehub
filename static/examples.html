@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="examples">Examples - AI CodeHub</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <!-- Markdown支持 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/highlight.min.js"></script>
+    <style>
+        .navbar {
+            margin-bottom: 2rem;
+        }
+        .example-card {
+            margin-bottom: 2rem;
+        }
+        .markdown-content {
+            padding: 1.5rem;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        .markdown-content pre {
+            background-color: #ffffff;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        .markdown-content code {
+            color: #333;
+            background-color: transparent;
+            padding: 0;
+        }
+        .example-tags {
+            margin-bottom: 1rem;
+        }
+        .example-tag {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include navigation bar -->
+    <div id="navbar-container"></div>
+
+    <section class="section">
+        <div class="container">
+            <h1 class="title" data-i18n="examples">Examples</h1>
+            <div class="content">
+                <div id="examples-container">
+                    <!-- Examples will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="/js/i18n.js"></script>
+    <script src="/js/locales.js"></script>
+    <script>
+        // 配置 marked 使用 highlight.js
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true
+        });
+
+        // 加载示例数据
+        async function loadExamples() {
+            try {
+                const response = await fetch('/api/v1/examples');
+                const examples = await response.json();
+                displayExamples(examples);
+            } catch (error) {
+                console.error('Error loading examples:', error);
+                // 临时示例数据用于展示
+                const examples = [
+                    {
+                        title: '基础模型加载示例',
+                        description: '展示如何加载和使用预训练模型',
+                        tags: ['PyTorch', '模型加载', '基础'],
+                        code: `
+# 基础模型加载示例
+\`\`\`python
+import torch
+from transformers import AutoModel, AutoTokenizer
+
+def load_model(model_name):
+    # 加载tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    
+    # 加载模型
+    model = AutoModel.from_pretrained(model_name)
+    
+    return tokenizer, model
+
+# 使用示例
+model_name = "bert-base-chinese"
+tokenizer, model = load_model(model_name)
+
+# 准备输入
+text = "这是一个示例文本"
+inputs = tokenizer(text, return_tensors="pt")
+
+# 获取模型输出
+outputs = model(**inputs)
+\`\`\`
+                        `
+                    },
+                    {
+                        title: 'GPU加速示例',
+                        description: '展示如何使用GPU加速模型训练和推理',
+                        tags: ['PyTorch', 'GPU', '性能优化'],
+                        code: `
+# GPU加速示例
+\`\`\`python
+import torch
+import torch.nn as nn
+
+def prepare_model_for_gpu(model):
+    # 检查是否有可用的GPU
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        # 将模型移动到GPU
+        model = model.to(device)
+        print(f"模型已加载到GPU: {torch.cuda.get_device_name()}")
+    else:
+        device = torch.device("cpu")
+        print("未检测到GPU，使用CPU")
+    
+    return model, device
+
+# 使用示例
+model = nn.Sequential(
+    nn.Linear(10, 5),
+    nn.ReLU(),
+    nn.Linear(5, 1)
+)
+
+# 准备模型和数据
+model, device = prepare_model_for_gpu(model)
+data = torch.randn(100, 10).to(device)
+
+# 在GPU上进行推理
+with torch.no_grad():
+    output = model(data)
+\`\`\`
+                        `
+                    }
+                ];
+                displayExamples(examples);
+            }
+        }
+
+        // 显示示例
+        function displayExamples(examples) {
+            const container = document.getElementById('examples-container');
+            examples.forEach(example => {
+                const exampleElement = document.createElement('div');
+                exampleElement.className = 'example-card box';
+                
+                // 创建标签
+                const tagsHtml = example.tags.map(tag => 
+                    `<span class="tag is-info example-tag">${tag}</span>`
+                ).join('');
+                
+                exampleElement.innerHTML = `
+                    <h2 class="title is-4">${example.title}</h2>
+                    <div class="example-tags">
+                        ${tagsHtml}
+                    </div>
+                    <p class="subtitle is-6">${example.description}</p>
+                    <div class="markdown-content">
+                        ${marked.parse(example.code)}
+                    </div>
+                `;
+                
+                container.appendChild(exampleElement);
+            });
+        }
+
+        // 加载导航栏
+        fetch('/components/navbar.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('navbar-container').innerHTML = html;
+                // 初始化语言
+                const currentLang = localStorage.getItem('language') || 'cn';
+                updateTranslations(currentLang);
+            })
+            .catch(error => console.error('Error loading navbar:', error));
+
+        // 页面加载完成后加载示例
+        document.addEventListener('DOMContentLoaded', loadExamples);
+    </script>
+</body>
+</html> 

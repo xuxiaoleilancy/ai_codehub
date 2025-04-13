@@ -72,7 +72,15 @@ const locales = {
         
         // Project Actions
         'confirm_delete': 'Are you sure you want to delete this project?',
-        'project_error': 'An error occurred while processing the project'
+        'project_error': 'An error occurred while processing the project',
+        
+        // Examples page
+        example_title: 'Code Examples',
+        model_loading: 'Model Loading Example',
+        gpu_acceleration: 'GPU Acceleration Example',
+        basic: 'Basic',
+        performance: 'Performance',
+        optimization: 'Optimization'
     },
     zh: {
         // Common
@@ -147,6 +155,14 @@ const locales = {
         
         // Project Actions
         'confirm_delete': '确定要删除此项目吗？',
-        'project_error': '处理项目时发生错误'
+        'project_error': '处理项目时发生错误',
+        
+        // Examples page
+        example_title: '代码示例',
+        model_loading: '模型加载示例',
+        gpu_acceleration: 'GPU加速示例',
+        basic: '基础',
+        performance: '性能',
+        optimization: '优化'
     }
 }; 
