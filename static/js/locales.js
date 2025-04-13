@@ -119,6 +119,16 @@ const locales = {
         "logout_success": "Logout successful",
         "login_failed": "Login failed",
         "logout_failed": "Logout failed",
+        "api_docs": "API Documentation",
+        "authentication": "Authentication",
+        "auth_description": "To use the API, you need to obtain an access token first. Here are the authentication steps:",
+        "client_credentials": "Client Credentials",
+        "client_id": "Client ID",
+        "client_secret": "Client Secret",
+        "get_token": "Get Access Token",
+        "token_description": "Use the following endpoint to get an access token:",
+        "use_token": "Use Access Token",
+        "token_usage": "Add the access token to your request headers:",
     },
     zh: {
         // Common
@@ -240,5 +250,15 @@ const locales = {
         "logout_success": "退出成功",
         "login_failed": "登录失败",
         "logout_failed": "退出失败",
+        "api_docs": "API 文档",
+        "authentication": "认证",
+        "auth_description": "要使用 API，您需要先获取访问令牌。以下是认证步骤：",
+        "client_credentials": "客户端凭证",
+        "client_id": "Client ID",
+        "client_secret": "Client Secret",
+        "get_token": "获取访问令牌",
+        "token_description": "使用以下端点获取访问令牌：",
+        "use_token": "使用访问令牌",
+        "token_usage": "在请求头中添加访问令牌："
     }
 }; 
