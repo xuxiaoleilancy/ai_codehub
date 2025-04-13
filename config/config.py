@@ -6,6 +6,10 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "AI CodeHub"
     
+    # Server Settings
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    
     # Security
     SECRET_KEY: str = "your-secret-key-here"  # Change this in production
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
