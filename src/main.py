@@ -1,12 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from config.config import settings
-from src.api.routers import model_router
+from src.core.config import settings
+from src.api.routers import auth_router
+from src.database import Base, engine
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="AI CodeHub - A platform for managing and sharing AI models",
-    version="1.0.0",
+    version=settings.VERSION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
@@ -20,16 +23,15 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(model_router.router)
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 
 @app.get("/")
 async def root():
     return {
-        "message": "Welcome to AI CodeHub",
-        "version": "1.0.0",
-        "status": "running",
+        "message": "Welcome to AI CodeHub API",
+        "version": settings.VERSION,
         "docs_url": "/docs",
-        "api_version": settings.API_V1_STR
+        "redoc_url": "/redoc"
     }
 
 @app.get(f"{settings.API_V1_STR}/health")
@@ -38,4 +40,10 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    import os
+    
+    # Set environment variables from settings
+    os.environ["AI_CODEHUB_HOST"] = settings.HOST
+    os.environ["AI_CODEHUB_PORT"] = str(settings.PORT)
+    
+    uvicorn.run(app, host=settings.HOST, port=settings.PORT) 

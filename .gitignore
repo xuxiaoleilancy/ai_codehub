@@ -21,11 +21,13 @@ wheels/
 *.egg
 
 # Virtual Environment
-venv/
-env/
-ENV/
 .env
 .venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 .conda/
 
 # IDE
@@ -33,62 +35,60 @@ ENV/
 .vscode/
 *.swp
 *.swo
-.DS_Store
+*~
 
-# Test and Coverage
-.coverage
-htmlcov/
-.pytest_cache/
-.tox/
-.nox/
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
 # Logs
 *.log
 logs/
 log/
 
-# Reports
-reports/
-*.report
-*.json
-*.html
+# Test
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+.hypothesis/
 
-# Model files
-*.pt
-*.pth
-*.onnx
-*.pb
-*.h5
-*.tflite
-
-# Data files
-*.csv
-*.dat
-*.out
-*.gz
-*.zip
-*.tar
+# Distribution
 *.tar.gz
+*.zip
+*.rar
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+reports/
+data/
+models/
+.cache/
+temp/
+tmp/
 
 # Jupyter Notebook
 .ipynb_checkpoints
 *.ipynb
 
 # Local development
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+local_settings.py
+local_config.py
 
-# Temporary files
+# Documentation
+docs/_build/
+site/
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Misc
+*.bak
 *.tmp
-*.temp
-.temp/
-temp/ 
+*.temp 
