@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
@@ -9,6 +9,8 @@ from typing import Optional
 import os
 from pathlib import Path
 from fastapi.templating import Jinja2Templates
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.openapi.utils import get_openapi
 
 from src.core.config import settings
 from src.api.routers import auth_router
@@ -20,7 +22,8 @@ from src.core.security import (
     create_access_token,
     get_password_hash,
     verify_password,
-    get_current_user
+    get_current_user,
+    get_current_active_user
 )
 from src.database.schemas.user import UserCreate, UserInDB, Token
 from src.database.models.user import User
@@ -32,20 +35,29 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url="/openapi.json",
+    docs_url=None,  # 禁用默认的 Swagger UI
+    redoc_url=None,  # 禁用默认的 ReDoc
+    description="AI CodeHub API 文档",
+    openapi_tags=[
+        {"name": "auth", "description": "认证相关接口"},
+        {"name": "models", "description": "模型相关接口"},
+        {"name": "projects", "description": "项目相关接口"},
+        {"name": "examples", "description": "示例相关接口"}
+    ]
 )
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Include routers
-app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(model_router, prefix="/api/v1/models", tags=["models"])
 app.include_router(project_router, prefix="/api/v1/projects", tags=["projects"])
 app.include_router(example_router, prefix="/api/v1", tags=["examples"])
@@ -142,6 +154,52 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         },
         status_code=exc.status_code
     )
+
+# 添加用户路由
+@app.get("/api/v1/users/me", response_model=UserInDB)
+async def get_user_me(current_user: User = Depends(get_current_active_user)):
+    """获取当前用户信息"""
+    return current_user
+
+# 自定义 Swagger UI
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title=f"{settings.PROJECT_NAME} - API 文档",
+        swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js",
+        swagger_css_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
+    )
+
+# 自定义 OpenAPI 文档
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title=settings.PROJECT_NAME,
+        version=settings.VERSION,
+        description="AI CodeHub API 文档",
+        routes=app.routes,
+    )
+    
+    # 添加安全配置
+    openapi_schema["components"]["securitySchemes"] = {
+        "OAuth2PasswordBearer": {
+            "type": "oauth2",
+            "flows": {
+                "password": {
+                    "tokenUrl": "/api/v1/auth/login",
+                    "scopes": {}
+                }
+            }
+        }
+    }
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 if __name__ == "__main__":
     import uvicorn

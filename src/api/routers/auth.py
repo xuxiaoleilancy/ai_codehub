@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional, Any
@@ -23,7 +24,7 @@ router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 密码Bearer方案
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 class LoginData(BaseModel):
     username: str
@@ -33,6 +34,10 @@ class UserUpdate(BaseModel):
     email: Optional[str] = None
     current_password: Optional[str] = None
     new_password: Optional[str] = None
+
+class ClientCredentialsData(BaseModel):
+    client_id: str
+    client_secret: str
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """验证密码"""
@@ -75,17 +80,45 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 
 @router.post("/login", response_model=Token)
 async def login(
-    login_data: LoginData,
+    request: Request,
     db: Session = Depends(get_db),
 ) -> Any:
-    """用户登录"""
-    user = db.query(User).filter(User.username == login_data.username).first()
-    if not user or not verify_password(login_data.password, user.hashed_password):
+    """用户登录
+    支持两种格式：
+    1. application/x-www-form-urlencoded (OAuth2PasswordRequestForm)
+    2. application/json (LoginData)
+    """
+    content_type = request.headers.get("content-type", "")
+    
+    if "application/json" in content_type:
+        try:
+            login_data = await request.json()
+            username = login_data.get("username")
+            password = login_data.get("password")
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid JSON data",
+            )
+    else:
+        form_data = await request.form()
+        username = form_data.get("username")
+        password = form_data.get("password")
+    
+    if not username or not password:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Missing username or password",
+        )
+
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="用户名或密码错误",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
     access_token = create_access_token(
         data={"sub": user.username}
     )
@@ -96,7 +129,7 @@ async def login(
         "is_superuser": user.is_superuser,
     }
 
-@router.post("/register", response_model=UserInDB)
+@router.post("/register", response_model=Token)
 async def register_user(
     *,
     db: Session = Depends(get_db),
@@ -109,7 +142,7 @@ async def register_user(
         if user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="用户名已存在"
+                detail="Username already registered"
             )
         
         # 检查邮箱是否已存在
@@ -133,7 +166,17 @@ async def register_user(
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
-        return db_user
+        
+        # 创建访问令牌
+        access_token = create_access_token(
+            data={"sub": db_user.username}
+        )
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "username": db_user.username,
+            "is_superuser": db_user.is_superuser,
+        }
     except Exception as e:
         db.rollback()
         raise HTTPException(
@@ -144,7 +187,14 @@ async def register_user(
 @router.get("/me", response_model=UserInDB)
 async def get_current_user(current_user: User = Depends(get_current_active_user)):
     """获取当前用户信息"""
-    return current_user
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "is_active": current_user.is_active,
+        "is_superuser": current_user.is_superuser,
+        "hashed_password": current_user.hashed_password
+    }
 
 @router.put("/me", response_model=UserInDB)
 async def update_user(
@@ -181,7 +231,15 @@ async def update_user(
         
         db.commit()
         db.refresh(current_user)
-        return current_user
+        
+        return {
+            "id": current_user.id,
+            "username": current_user.username,
+            "email": current_user.email,
+            "is_active": current_user.is_active,
+            "is_superuser": current_user.is_superuser,
+            "hashed_password": current_user.hashed_password
+        }
     except Exception as e:
         db.rollback()
         raise HTTPException(
@@ -192,4 +250,50 @@ async def update_user(
 @router.post("/logout")
 async def logout():
     """用户登出"""
-    return {"message": "Logout successful"} 
+    return {"message": "Logout successful"}
+
+@router.post("/client-credentials", response_model=Token)
+async def get_client_credentials(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> Any:
+    """获取客户端凭证
+    支持两种格式：
+    1. application/x-www-form-urlencoded (OAuth2ClientCredentialsRequestForm)
+    2. application/json (ClientCredentialsData)
+    """
+    content_type = request.headers.get("content-type", "")
+    
+    if "application/json" in content_type:
+        try:
+            data = await request.json()
+            client_id = data.get("client_id")
+            client_secret = data.get("client_secret")
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid JSON data",
+            )
+    else:
+        form_data = await request.form()
+        client_id = form_data.get("client_id")
+        client_secret = form_data.get("client_secret")
+    
+    if not client_id or not client_secret:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Missing client_id or client_secret",
+        )
+
+    # 验证客户端凭证
+    # 这里可以根据实际需求实现客户端凭证的验证逻辑
+    # 例如：检查数据库中的客户端信息
+    
+    access_token = create_access_token(
+        data={"sub": client_id, "type": "client"}
+    )
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "client_id": client_id,
+    } 

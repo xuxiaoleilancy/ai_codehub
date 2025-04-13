@@ -33,7 +33,7 @@ def test_required_packages(report_generator):
         'torch': '2.1.1',
         'numpy': '1.24.3',
         'pandas': '2.1.3',
-        'fastapi': '0.104.1',
+        'fastapi': '0.95.0',
         'pytest': '7.4.3',
         'scikit-learn': '1.3.2'
     }

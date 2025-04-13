@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const response = await fetch('/api/auth/token', {
+            const response = await fetch('/api/v1/auth/token', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const response = await fetch('/api/auth/register', {
+            const response = await fetch('/api/v1/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 获取用户信息
     async function fetchUserInfo() {
         try {
-            const response = await fetch('/api/auth/me', {
+            const response = await fetch('/api/v1/auth/me', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
