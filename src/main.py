@@ -11,6 +11,7 @@ from pathlib import Path
 
 from src.core.config import settings
 from src.api.routers import auth_router
+from src.api.routers.model_router import router as model_router
 from src.database import Base, engine, SessionLocal
 from src.core.security import (
     create_access_token,
@@ -41,8 +42,9 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(model_router, prefix="/api/models", tags=["models"])
 
-# 挂载静态文件目录
+# Mount static files directory
 static_dir = Path(__file__).parent.parent / "static"
 static_dir.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
@@ -61,14 +63,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 async def read_root():
     return FileResponse(str(static_dir / "index.html"))
 
-@app.get("/")
-async def root():
-    return {
-        "message": "Welcome to AI CodeHub API",
-        "version": settings.VERSION,
-        "docs_url": "/docs",
-        "redoc_url": "/redoc"
-    }
+@app.get("/models")
+async def read_models_page():
+    return FileResponse(str(static_dir / "models.html"))
 
 @app.get(f"{settings.API_V1_STR}/health")
 async def health_check():
@@ -78,7 +75,12 @@ if __name__ == "__main__":
     import uvicorn
     
     # Set environment variables from settings
-    os.environ["AI_CODEHUB_HOST"] = settings.HOST
-    os.environ["AI_CODEHUB_PORT"] = str(settings.PORT)
+    os.environ.setdefault("HOST", settings.HOST)
+    os.environ.setdefault("PORT", str(settings.PORT))
     
-    uvicorn.run(app, host=settings.HOST, port=settings.PORT) 
+    uvicorn.run(
+        "src.main:app",
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", 8000)),
+        reload=True
+    ) 

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Management - AI CodeHub</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/models.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI CodeHub - Model Management</h1>
+            <nav>
+                <a href="/" class="nav-link">Home</a>
+                <a href="/models" class="nav-link active">Models</a>
+                <button id="logoutBtn" class="btn">Logout</button>
+            </nav>
+        </header>
+
+        <main>
+            <section class="model-upload">
+                <h2>Upload Model</h2>
+                <form id="uploadForm" class="upload-form">
+                    <div class="form-group">
+                        <label for="modelName">Model Name</label>
+                        <input type="text" id="modelName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modelDescription">Description</label>
+                        <textarea id="modelDescription" name="description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="modelVersion">Version</label>
+                        <input type="text" id="modelVersion" name="version" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modelFramework">Framework</label>
+                        <select id="modelFramework" name="framework" required>
+                            <option value="pytorch">PyTorch</option>
+                            <option value="tensorflow">TensorFlow</option>
+                            <option value="onnx">ONNX</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="modelTaskType">Task Type</label>
+                        <select id="modelTaskType" name="task_type" required>
+                            <option value="classification">Classification</option>
+                            <option value="detection">Detection</option>
+                            <option value="segmentation">Segmentation</option>
+                            <option value="nlp">NLP</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="modelFile">Model File</label>
+                        <input type="file" id="modelFile" name="file" required>
+                    </div>
+                    <button type="submit" class="btn">Upload Model</button>
+                </form>
+            </section>
+
+            <section class="model-list">
+                <h2>Model List</h2>
+                <div class="filters">
+                    <input type="text" id="searchInput" placeholder="Search models...">
+                    <select id="frameworkFilter">
+                        <option value="">All Frameworks</option>
+                        <option value="pytorch">PyTorch</option>
+                        <option value="tensorflow">TensorFlow</option>
+                        <option value="onnx">ONNX</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <select id="taskFilter">
+                        <option value="">All Tasks</option>
+                        <option value="classification">Classification</option>
+                        <option value="detection">Detection</option>
+                        <option value="segmentation">Segmentation</option>
+                        <option value="nlp">NLP</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div id="modelList" class="model-grid"></div>
+            </section>
+
+            <div id="modelModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Model Details</h2>
+                    <div id="modelDetails"></div>
+                    <div class="modal-actions">
+                        <button id="updateModelBtn" class="btn">Update</button>
+                        <button id="deleteModelBtn" class="btn btn-danger">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/models.js"></script>
+</body>
+</html> 
+ 
