@@ -1,13 +1,14 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional
 import os
 from pathlib import Path
+from fastapi.templating import Jinja2Templates
 
 from src.core.config import settings
 from src.api.routers import auth_router
@@ -23,6 +24,7 @@ from src.core.security import (
 )
 from src.database.schemas.user import UserCreate, UserInDB, Token
 from src.database.models.user import User
+from src.translations import get_error_response
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -51,44 +53,43 @@ app.include_router(example_router, prefix="/api/v1", tags=["examples"])
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/components", StaticFiles(directory="static/components"), name="components")
+app.mount("/js", StaticFiles(directory="static/js"), name="js")
+app.mount("/css", StaticFiles(directory="static/css"), name="css")
 
-# 依赖项
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-
-@app.get("/")
-async def read_root():
-    return FileResponse(str(static_dir / "index.html"))
-
-@app.get("/models")
-async def read_models_page():
-    return FileResponse(str(static_dir / "models.html"))
-
-@app.get("/login")
-async def read_login_page():
-    return FileResponse(str(static_dir / "login.html"))
-
-@app.get("/register")
-async def read_register_page():
-    return FileResponse(str(static_dir / "register.html"))
-
-@app.get("/projects")
-async def read_projects_page():
-    return FileResponse(str(static_dir / "projects.html"))
-
-@app.get("/examples")
-async def read_examples_page():
-    return FileResponse(str(static_dir / "examples.html"))
-
-@app.get(f"{settings.API_V1_STR}/health")
+# Health check endpoint
+@app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+# Root endpoint
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+# Page routes
+@app.get("/models", response_class=HTMLResponse)
+async def read_models_page(request: Request):
+    return templates.TemplateResponse("models.html", {"request": request})
+
+@app.get("/register", response_class=HTMLResponse)
+async def read_register_page(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+@app.get("/login", response_class=HTMLResponse)
+async def read_login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/examples", response_class=HTMLResponse)
+async def read_examples_page(request: Request):
+    return templates.TemplateResponse("examples.html", {"request": request})
+
+@app.get("/projects/new", response_class=HTMLResponse)
+async def read_new_project_page(request: Request):
+    return templates.TemplateResponse("new-project.html", {"request": request})
+
+@app.get("/projects", response_class=HTMLResponse)
+async def read_projects_page(request: Request):
+    return templates.TemplateResponse("projects.html", {"request": request})
 
 # Serve static files directly
 @app.get("/static/{path:path}")
@@ -104,6 +105,39 @@ async def serve_components(path: str):
     if component_path.exists():
         return FileResponse(str(component_path))
     raise HTTPException(status_code=404, detail="File not found")
+
+# 依赖项
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+# 配置模板
+templates = Jinja2Templates(directory="static")
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """处理 HTTP 异常，返回多语言错误消息"""
+    lang = request.headers.get("Accept-Language", "zh")
+    if lang not in ["en", "zh"]:
+        lang = "zh"
+    
+    return templates.TemplateResponse(
+        "error.html",
+        {
+            "request": request,
+            "error": get_error_response(
+                exc.detail,
+                lang=lang,
+                status_code=exc.status_code
+            )
+        },
+        status_code=exc.status_code
+    )
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="/static/js/locales.js"></script>
+    <script src="/static/js/i18n.js"></script>
+    <title data-i18n="error">错误</title>
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <div class="card">
+                        <div class="card-content has-text-centered">
+                            <span class="icon is-large has-text-danger mb-4">
+                                <i class="fas fa-exclamation-circle fa-3x"></i>
+                            </span>
+                            <h1 class="title is-2" data-i18n="error">错误</h1>
+                            <h2 class="subtitle is-4">{{ error.status_code }}</h2>
+                            <p class="content is-medium">{{ error.error }}</p>
+                            <div class="buttons is-centered mt-4">
+                                <a href="/" class="button is-primary" data-i18n="back_to_home">返回首页</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // 加载导航栏并初始化语言
+        document.addEventListener('DOMContentLoaded', async () => {
+            const navbarContainer = document.getElementById('navbar-container');
+            if (navbarContainer) {
+                try {
+                    // 显示加载状态
+                    navbarContainer.innerHTML = `
+                        <div class="has-text-centered">
+                            <span class="icon is-medium">
+                                <i class="fas fa-spinner fa-pulse"></i>
+                            </span>
+                            <span data-i18n="loading">加载中...</span>
+                        </div>
+                    `;
+                    
+                    const response = await fetch('/components/navbar.html');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const html = await response.text();
+                    navbarContainer.innerHTML = html;
+                    
+                    // 初始化语言
+                    const savedLang = localStorage.getItem('language') || 'zh';
+                    document.documentElement.lang = savedLang;
+                    updateTranslations(savedLang);
+                    
+                    // 监听语言切换
+                    document.addEventListener('languageChanged', (event) => {
+                        const newLang = event.detail.language;
+                        document.documentElement.lang = newLang;
+                        updateTranslations(newLang);
+                    });
+                } catch (error) {
+                    console.error('Error loading navbar:', error);
+                    navbarContainer.innerHTML = `
+                        <div class="notification is-warning">
+                            <button class="delete"></button>
+                            <p data-i18n="navbar_load_error">导航栏加载失败，请刷新页面重试</p>
+                        </div>
+                    `;
+                    navbarContainer.querySelector('.delete')?.addEventListener('click', () => {
+                        navbarContainer.innerHTML = '';
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

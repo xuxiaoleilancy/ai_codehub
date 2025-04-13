@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="/static/js/locales.js"></script>
+    <script src="/static/js/i18n.js"></script>
     <title data-i18n="create_project">创建新项目</title>
     <style>
         .section {
@@ -12,6 +15,12 @@
         }
         .navbar {
             margin-bottom: 2rem;
+        }
+        .field:not(:last-child) {
+            margin-bottom: 1.5rem;
+        }
+        .notification {
+            margin-bottom: 1rem;
         }
     </style>
 </head>
@@ -24,12 +33,21 @@
             
             <div class="columns is-centered">
                 <div class="column is-8">
+                    <!-- 错误提示 -->
+                    <div id="error-message" class="notification is-danger is-hidden">
+                        <button class="delete"></button>
+                        <p></p>
+                    </div>
+
                     <form id="project-form" class="box">
                         <!-- 项目名称 -->
                         <div class="field">
                             <label class="label" data-i18n="project_name">项目名称</label>
-                            <div class="control">
+                            <div class="control has-icons-left">
                                 <input class="input" type="text" id="name" name="name" required>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-project-diagram"></i>
+                                </span>
                             </div>
                         </div>
 
@@ -44,12 +62,15 @@
                         <!-- 模型选择 -->
                         <div class="field">
                             <label class="label" data-i18n="select_model">选择模型</label>
-                            <div class="control">
+                            <div class="control has-icons-left">
                                 <div class="select is-fullwidth">
                                     <select id="model" name="model" required>
                                         <option value="" data-i18n="select_model_placeholder">请选择模型</option>
                                     </select>
                                 </div>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-brain"></i>
+                                </span>
                             </div>
                         </div>
 
@@ -79,6 +100,18 @@
     </section>
 
     <script>
+        // 错误提示处理
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.querySelector('p').textContent = message;
+            errorDiv.classList.remove('is-hidden');
+        }
+
+        // 关闭错误提示
+        document.querySelector('.notification .delete')?.addEventListener('click', function(e) {
+            e.target.parentElement.classList.add('is-hidden');
+        });
+
         // 加载导航栏
         document.addEventListener('DOMContentLoaded', async () => {
             const navbarContainer = document.getElementById('navbar-container');
@@ -108,11 +141,13 @@
                     
                     // 监听语言切换
                     document.addEventListener('languageChanged', (event) => {
-                        updateTranslations(event.detail.language);
+                        const newLang = event.detail.language;
+                        document.documentElement.lang = newLang;
+                        updateTranslations(newLang);
                     });
 
                     // 加载可用模型列表
-                    loadModels();
+                    await loadModels();
                 } catch (error) {
                     console.error('Error loading navbar:', error);
                     navbarContainer.innerHTML = `
@@ -131,8 +166,16 @@
         // 加载可用模型列表
         async function loadModels() {
             try {
-                const response = await fetch('/api/v1/models/');
+                const response = await fetch('/api/v1/models/', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
                 if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+                        return;
+                    }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const models = await response.json();
@@ -146,6 +189,7 @@
                 });
             } catch (error) {
                 console.error('Error loading models:', error);
+                showError('加载模型列表失败，请刷新页面重试');
             }
         }
 
@@ -165,19 +209,21 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     },
                     body: JSON.stringify(formData)
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || '创建项目失败');
                 }
 
                 const result = await response.json();
                 window.location.href = `/projects/${result.id}`;
             } catch (error) {
                 console.error('Error creating project:', error);
-                alert('创建项目失败，请重试');
+                showError(error.message || '创建项目失败，请重试');
             }
         });
     </script>

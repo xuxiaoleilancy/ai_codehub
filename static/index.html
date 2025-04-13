@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,15 +37,15 @@
     <section class="hero is-medium">
         <div class="hero-body">
             <div class="container">
-                <h1 class="title is-1 has-text-white" data-translate="welcome">
-                    Welcome to AI CodeHub
+                <h1 class="title is-1 has-text-white" data-i18n="welcome">
+                    欢迎使用 AI CodeHub
                 </h1>
-                <h2 class="subtitle is-3 has-text-white">
-                    Your One-Stop Platform for AI Model Management and Deployment
+                <h2 class="subtitle is-3 has-text-white" data-i18n="welcome_subtitle">
+                    您的 AI 模型管理和部署一站式平台
                 </h2>
                 <div class="buttons">
-                    <a href="/models" class="button is-primary is-large" data-translate="explore_models">Explore Models</a>
-                    <a href="/register" class="button is-light is-large" data-translate="get_started">Get Started</a>
+                    <a href="/models" class="button is-primary is-large" data-i18n="explore_models">浏览模型</a>
+                    <a href="/register" class="button is-light is-large" data-i18n="get_started">开始使用</a>
                 </div>
             </div>
         </div>
@@ -54,14 +54,14 @@
     <!-- Features Section -->
     <section class="section">
         <div class="container">
-            <h2 class="title has-text-centered mb-6" data-translate="key_features">Key Features</h2>
+            <h2 class="title has-text-centered mb-6" data-i18n="key_features">主要功能</h2>
             <div class="columns">
                 <div class="column is-4">
                     <div class="card feature-card">
                         <div class="card-content">
-                            <h3 class="title is-4" data-translate="model_management">Model Management</h3>
-                            <p class="content" data-translate="model_management_desc">
-                                Easily upload, version, and manage your AI models in one centralized location.
+                            <h3 class="title is-4" data-i18n="model_management">模型管理</h3>
+                            <p class="content" data-i18n="model_management_desc">
+                                轻松上传、版本控制和集中管理您的 AI 模型。
                             </p>
                         </div>
                     </div>
@@ -69,9 +69,9 @@
                 <div class="column is-4">
                     <div class="card feature-card">
                         <div class="card-content">
-                            <h3 class="title is-4" data-translate="deployment_tools">Deployment Tools</h3>
-                            <p class="content" data-translate="deployment_tools_desc">
-                                Deploy your models with just a few clicks using our streamlined deployment tools.
+                            <h3 class="title is-4" data-i18n="deployment_tools">部署工具</h3>
+                            <p class="content" data-i18n="deployment_tools_desc">
+                                使用我们简化的部署工具，只需点击几下即可部署模型。
                             </p>
                         </div>
                     </div>
@@ -79,9 +79,9 @@
                 <div class="column is-4">
                     <div class="card feature-card">
                         <div class="card-content">
-                            <h3 class="title is-4" data-translate="collaboration">Collaboration</h3>
-                            <p class="content" data-translate="collaboration_desc">
-                                Work together with your team, share models, and manage access controls.
+                            <h3 class="title is-4" data-i18n="collaboration">协作功能</h3>
+                            <p class="content" data-i18n="collaboration_desc">
+                                与团队协作，共享模型，管理访问控制。
                             </p>
                         </div>
                     </div>
@@ -165,58 +165,6 @@
     </section>
 
     <script>
-        // 翻译函数
-        function updateTranslations(lang) {
-            const translations = {
-                en: {
-                    welcome: 'Welcome to AI CodeHub',
-                    explore_models: 'Explore Models',
-                    get_started: 'Get Started',
-                    key_features: 'Key Features',
-                    model_management: 'Model Management',
-                    model_management_desc: 'Easily upload, version, and manage your AI models in one centralized location.',
-                    deployment_tools: 'Deployment Tools',
-                    deployment_tools_desc: 'Deploy your models with just a few clicks using our streamlined deployment tools.',
-                    collaboration: 'Collaboration',
-                    collaboration_desc: 'Work together with your team, share models, and manage access controls.',
-                    getting_started: 'Getting Started',
-                    getting_started_desc: 'Start managing your AI models in three simple steps:',
-                    step1: 'Create an account',
-                    step2: 'Upload your first model',
-                    step3: 'Deploy and share with your team',
-                    create_account: 'Create Account',
-                    view_docs: 'View Documentation'
-                },
-                cn: {
-                    welcome: '欢迎使用 AI CodeHub',
-                    explore_models: '浏览模型',
-                    get_started: '开始使用',
-                    key_features: '主要功能',
-                    model_management: '模型管理',
-                    model_management_desc: '轻松上传、版本控制和集中管理您的 AI 模型。',
-                    deployment_tools: '部署工具',
-                    deployment_tools_desc: '使用我们简化的部署工具，只需点击几下即可部署模型。',
-                    collaboration: '协作功能',
-                    collaboration_desc: '与团队协作，共享模型，管理访问控制。',
-                    getting_started: '开始使用',
-                    getting_started_desc: '通过三个简单步骤开始管理您的 AI 模型：',
-                    step1: '创建账户',
-                    step2: '上传第一个模型',
-                    step3: '部署并与团队共享',
-                    create_account: '创建账户',
-                    view_docs: '查看文档'
-                }
-            };
-
-            const elements = document.querySelectorAll('[data-translate]');
-            elements.forEach(element => {
-                const key = element.getAttribute('data-translate');
-                if (translations[lang] && translations[lang][key]) {
-                    element.textContent = translations[lang][key];
-                }
-            });
-        }
-
         // 加载导航栏并初始化语言
         document.addEventListener('DOMContentLoaded', async () => {
             const navbarContainer = document.getElementById('navbar-container');
@@ -246,7 +194,9 @@
                     
                     // 监听语言切换
                     document.addEventListener('languageChanged', (event) => {
-                        updateTranslations(event.detail.language);
+                        const newLang = event.detail.language;
+                        document.documentElement.lang = newLang;
+                        updateTranslations(newLang);
                     });
                 } catch (error) {
                     console.error('Error loading navbar:', error);
@@ -256,7 +206,6 @@
                             <p data-i18n="navbar_load_error">导航栏加载失败，请刷新页面重试</p>
                         </div>
                     `;
-                    // 添加关闭通知的功能
                     navbarContainer.querySelector('.delete')?.addEventListener('click', () => {
                         navbarContainer.innerHTML = '';
                     });

@@ -1,0 +1,48 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 初始化 i18n
+        i18n.init();
+        
+        // 设置默认语言为中文
+        i18n.setLanguage('zh');
+        
+        // 添加语言切换事件监听
+        document.getElementById('language-selector').addEventListener('change', function(e) {
+            i18n.setLanguage(e.target.value);
+        });
+        
+        // 登录表单提交处理
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 登录成功，跳转到模型页面
+                    window.location.href = '/models';
+                } else {
+                    // 显示错误消息
+                    const errorMessage = document.getElementById('error-message');
+                    errorMessage.textContent = i18n.getText(data.message || 'login.error');
+                    errorMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = i18n.getText('login.error');
+                errorMessage.style.display = 'block';
+            });
+        });
+    });
+</script> 

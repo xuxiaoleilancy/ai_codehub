@@ -14,20 +14,20 @@
 
     <div id="navbarBasic" class="navbar-menu">
         <div class="navbar-start">
-            <a class="navbar-item" href="/" data-translate="home">
-                Home
+            <a class="navbar-item" href="/" data-i18n="home">
+                首页
             </a>
-            <a class="navbar-item" href="/models" data-translate="models">
-                Models
+            <a class="navbar-item" href="/models" data-i18n="models">
+                模型
             </a>
-            <a class="navbar-item" href="/projects" data-translate="projects">
-                Projects
+            <a class="navbar-item" href="/projects" data-i18n="projects">
+                项目
             </a>
-            <a class="navbar-item" href="/docs" data-translate="documentation">
-                Documentation
+            <a class="navbar-item" href="/docs" data-i18n="docs" target="_blank">
+                文档
             </a>
-            <a class="navbar-item" href="/examples" data-translate="examples">
-                Examples
+            <a class="navbar-item" href="/examples" data-i18n="examples">
+                示例
             </a>
         </div>
 
@@ -36,14 +36,41 @@
                 <div class="buttons">
                     <div class="language-switcher">
                         <button class="button is-light" id="lang-en">EN</button>
-                        <button class="button is-light" id="lang-cn">中文</button>
+                        <button class="button is-light" id="lang-zh">中文</button>
                     </div>
-                    <a class="button is-light" href="/login" data-translate="login">
-                        Log in
-                    </a>
-                    <a class="button is-primary" href="/register" data-translate="signup">
-                        <strong>Sign up</strong>
-                    </a>
+                    <!-- 未登录状态 -->
+                    <div id="guest-buttons">
+                        <a class="button is-light" href="/login" data-i18n="login">
+                            登录
+                        </a>
+                        <a class="button is-primary" href="/register" data-i18n="sign_up">
+                            <strong>注册</strong>
+                        </a>
+                    </div>
+                    <!-- 已登录状态 -->
+                    <div id="user-info" class="is-hidden">
+                        <div class="dropdown is-right is-hoverable">
+                            <div class="dropdown-trigger">
+                                <button class="button is-light" aria-haspopup="true" aria-controls="user-menu">
+                                    <span class="icon">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <span id="username-display"></span>
+                                </button>
+                            </div>
+                            <div class="dropdown-menu" id="user-menu" role="menu">
+                                <div class="dropdown-content">
+                                    <a class="dropdown-item" href="/profile" data-i18n="profile">
+                                        个人资料
+                                    </a>
+                                    <hr class="dropdown-divider">
+                                    <a class="dropdown-item" id="logout-button" data-i18n="logout">
+                                        退出登录
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -84,6 +111,14 @@
     .language-switcher button.active:hover {
         background-color: #276cda;
     }
+
+    #user-info {
+        margin-left: 0.5rem;
+    }
+
+    .dropdown-content {
+        min-width: 8rem;
+    }
 </style>
 
 <script>
@@ -103,64 +138,101 @@
 
         // 语言切换
         const langEn = document.getElementById('lang-en');
-        const langCn = document.getElementById('lang-cn');
+        const langZh = document.getElementById('lang-zh');
         
-        if (langEn && langCn) {
+        if (langEn && langZh) {
             // 设置初始状态
-            const currentLang = localStorage.getItem('language') || 'cn';
+            const currentLang = localStorage.getItem('language') || 'zh';
             if (currentLang === 'en') {
                 langEn.classList.add('active');
-                langCn.classList.remove('active');
+                langZh.classList.remove('active');
             } else {
                 langEn.classList.remove('active');
-                langCn.classList.add('active');
+                langZh.classList.add('active');
             }
             
             // 切换语言
             langEn.addEventListener('click', (e) => {
                 e.preventDefault();
-                localStorage.setItem('language', 'en');
+                switchLanguage('en');
                 langEn.classList.add('active');
-                langCn.classList.remove('active');
-                // 触发自定义事件
-                window.dispatchEvent(new CustomEvent('languageChanged', { detail: 'en' }));
+                langZh.classList.remove('active');
             });
             
-            langCn.addEventListener('click', (e) => {
+            langZh.addEventListener('click', (e) => {
                 e.preventDefault();
-                localStorage.setItem('language', 'cn');
+                switchLanguage('zh');
                 langEn.classList.remove('active');
-                langCn.classList.add('active');
-                // 触发自定义事件
-                window.dispatchEvent(new CustomEvent('languageChanged', { detail: 'cn' }));
+                langZh.classList.add('active');
             });
         }
 
-        // 更新翻译
-        const translations = {
-            en: {
-                home: 'Home',
-                documentation: 'Documentation',
-                examples: 'Examples',
-                login: 'Log in',
-                signup: 'Sign up'
-            },
-            cn: {
-                home: '首页',
-                documentation: '文档',
-                examples: '示例',
-                login: '登录',
-                signup: '注册'
-            }
-        };
-
-        const currentLang = localStorage.getItem('language') || 'en';
-        const elements = document.querySelectorAll('[data-translate]');
-        elements.forEach(element => {
-            const key = element.getAttribute('data-translate');
-            if (translations[currentLang] && translations[currentLang][key]) {
-                element.textContent = translations[currentLang][key];
-            }
-        });
+        // 检查登录状态
+        checkLoginStatus();
     });
+
+    // 切换语言函数
+    function switchLanguage(lang) {
+        // 保存语言设置
+        localStorage.setItem('language', lang);
+        
+        // 更新页面语言属性
+        document.documentElement.lang = lang;
+        
+        // 触发语言切换事件
+        const event = new CustomEvent('languageChanged', {
+            detail: { language: lang }
+        });
+        document.dispatchEvent(event);
+        
+        // 更新翻译
+        updateTranslations(lang);
+    }
+
+    // 检查登录状态
+    function checkLoginStatus() {
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        const guestButtons = document.getElementById('guest-buttons');
+        const userInfo = document.getElementById('user-info');
+        const usernameDisplay = document.getElementById('username-display');
+        const logoutButton = document.getElementById('logout-button');
+
+        if (token && username) {
+            // 已登录状态
+            guestButtons.classList.add('is-hidden');
+            userInfo.classList.remove('is-hidden');
+            usernameDisplay.textContent = username;
+
+            // 添加登出事件监听
+            logoutButton.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    const response = await fetch('/api/v1/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        // 清除本地存储
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('username');
+                        
+                        // 刷新页面
+                        window.location.href = '/';
+                    } else {
+                        console.error('Logout failed');
+                    }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+            });
+        } else {
+            // 未登录状态
+            guestButtons.classList.remove('is-hidden');
+            userInfo.classList.add('is-hidden');
+        }
+    }
 </script> 

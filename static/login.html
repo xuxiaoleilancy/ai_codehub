@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="login">Login - AI CodeHub</title>
+    <title data-i18n="login">登录 - AI CodeHub</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <script src="/static/js/locales.js"></script>
+    <script src="/static/js/i18n.js"></script>
     <style>
         .login-container {
             margin-top: 3rem;
@@ -24,10 +26,10 @@
                 <div class="column is-4">
                     <div class="card">
                         <div class="card-content">
-                            <h1 class="title has-text-centered" data-i18n="login">Login</h1>
+                            <h1 class="title has-text-centered" data-i18n="login">登录</h1>
                             <form id="loginForm">
                                 <div class="field">
-                                    <label class="label" data-i18n="username">Username</label>
+                                    <label class="label" data-i18n="username">用户名</label>
                                     <div class="control">
                                         <input class="input" type="text" id="username" name="username" required 
                                                data-i18n-placeholder="username">
@@ -35,21 +37,23 @@
                                 </div>
 
                                 <div class="field">
-                                    <label class="label" data-i18n="password">Password</label>
+                                    <label class="label" data-i18n="password">密码</label>
                                     <div class="control">
                                         <input class="input" type="password" id="password" name="password" required 
                                                data-i18n-placeholder="password">
                                     </div>
                                 </div>
 
+                                <div class="notification is-danger is-hidden" id="error-message"></div>
+
                                 <div class="field">
                                     <div class="control">
-                                        <button type="submit" class="button is-primary is-fullwidth" data-i18n="login">Login</button>
+                                        <button type="submit" class="button is-primary is-fullwidth" data-i18n="login">登录</button>
                                     </div>
                                 </div>
 
                                 <div class="has-text-centered mt-4">
-                                    <p data-i18n="no_account">Don't have an account? <a href="/register" data-i18n="sign_up">Sign up</a></p>
+                                    <p data-i18n="no_account">还没有账号？ <a href="/register" data-i18n="sign_up">注册</a></p>
                                 </div>
                             </form>
                         </div>
@@ -59,46 +63,78 @@
         </div>
     </section>
 
-    <script src="/static/js/locales.js"></script>
-    <script src="/static/js/i18n.js"></script>
     <script>
-        // Load navigation bar
-        fetch('/components/navbar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('navbar-container').innerHTML = html;
-            })
-            .catch(error => console.error('Error loading navbar:', error));
+        // 初始化语言
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('language') || 'zh';
+            document.documentElement.lang = savedLang;
+            updateTranslations(savedLang);
 
-        // Handle login form submission
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value
-            };
+            // 加载导航栏
+            fetch('/components/navbar.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('navbar-container').innerHTML = html;
+                    // 初始化导航栏中的语言切换
+                    const savedLang = localStorage.getItem('language') || 'zh';
+                    document.documentElement.lang = savedLang;
+                    updateTranslations(savedLang);
+                })
+                .catch(error => console.error('Error loading navbar:', error));
 
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
+            // 处理登录表单提交
+            const form = document.getElementById('loginForm');
+            const errorMessage = document.getElementById('error-message');
 
-                if (response.ok) {
-                    const data = await response.json();
-                    localStorage.setItem('token', data.access_token);
-                    window.location.href = '/models';
-                } else {
-                    alert(i18n.getText('login_failed'));
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Login successful, data:', data);
+                        
+                        // 保存用户信息和令牌
+                        localStorage.setItem('token', data.access_token);
+                        localStorage.setItem('username', username);
+                        localStorage.setItem('is_superuser', data.is_superuser);
+                        
+                        // 显示成功消息
+                        errorMessage.textContent = i18n.getText('login_success');
+                        errorMessage.classList.remove('is-danger');
+                        errorMessage.classList.add('is-success');
+                        errorMessage.classList.remove('is-hidden');
+                        
+                        // 直接跳转，不使用 replace
+                        console.log('Redirecting to models page...');
+                        window.location.href = '/models';
+                        return;
+                    } else {
+                        const error = await response.json();
+                        errorMessage.textContent = error.detail || i18n.getText('login_failed');
+                        errorMessage.classList.remove('is-success');
+                        errorMessage.classList.add('is-danger');
+                        errorMessage.classList.remove('is-hidden');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    errorMessage.textContent = i18n.getText('login_failed');
+                    errorMessage.classList.remove('is-success');
+                    errorMessage.classList.add('is-danger');
+                    errorMessage.classList.remove('is-hidden');
                 }
-            } catch (error) {
-                console.error('Error during login:', error);
-                alert(i18n.getText('login_error'));
-            }
+            });
         });
     </script>
 </body>

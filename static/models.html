@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="models">Models - AI CodeHub</title>
+    <title data-i18n="models">模型管理 - AI CodeHub</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <script src="/static/js/locales.js"></script>
+    <script src="/static/js/i18n.js"></script>
     <style>
         .navbar {
             margin-bottom: 2rem;
@@ -35,11 +37,11 @@
         <div class="container models-container">
             <div class="level">
                 <div class="level-left">
-                    <h1 class="title" data-i18n="models">Models</h1>
+                    <h1 class="title" data-i18n="models">模型管理</h1>
                 </div>
                 <div class="level-right">
                     <button class="button is-primary" onclick="showCreateModelModal()" data-i18n="create_model">
-                        Create Model
+                        创建模型
                     </button>
                 </div>
             </div>
@@ -48,11 +50,11 @@
                 <table class="table is-fullwidth is-striped">
                     <thead>
                         <tr>
-                            <th data-i18n="model_name">Model Name</th>
-                            <th data-i18n="model_type">Model Type</th>
-                            <th data-i18n="model_version">Version</th>
-                            <th data-i18n="model_status">Status</th>
-                            <th data-i18n="model_actions">Actions</th>
+                            <th data-i18n="model_name">模型名称</th>
+                            <th data-i18n="model_type">模型类型</th>
+                            <th data-i18n="model_version">版本</th>
+                            <th data-i18n="model_status">状态</th>
+                            <th data-i18n="model_actions">操作</th>
                         </tr>
                     </thead>
                     <tbody id="modelsTableBody">
@@ -68,13 +70,13 @@
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
-                <p class="modal-card-title" data-i18n="create_model">Create Model</p>
+                <p class="modal-card-title" data-i18n="create_model">创建模型</p>
                 <button class="delete" aria-label="close" onclick="closeCreateModelModal()"></button>
             </header>
             <section class="modal-card-body">
                 <form id="createModelForm">
                     <div class="field">
-                        <label class="label" data-i18n="model_name">Model Name</label>
+                        <label class="label" data-i18n="model_name">模型名称</label>
                         <div class="control">
                             <input class="input" type="text" id="modelName" name="name" required 
                                    data-i18n-placeholder="model_name">
@@ -82,20 +84,20 @@
                     </div>
 
                     <div class="field">
-                        <label class="label" data-i18n="model_type">Model Type</label>
+                        <label class="label" data-i18n="model_type">模型类型</label>
                         <div class="control">
                             <div class="select is-fullwidth">
                                 <select id="modelType" name="type" required>
-                                    <option value="classification" data-i18n="classification">Classification</option>
-                                    <option value="regression" data-i18n="regression">Regression</option>
-                                    <option value="generative" data-i18n="generative">Generative</option>
+                                    <option value="classification" data-i18n="classification">分类</option>
+                                    <option value="regression" data-i18n="regression">回归</option>
+                                    <option value="generative" data-i18n="generative">生成</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
                     <div class="field">
-                        <label class="label" data-i18n="model_version">Version</label>
+                        <label class="label" data-i18n="model_version">版本</label>
                         <div class="control">
                             <input class="input" type="text" id="modelVersion" name="version" required 
                                    data-i18n-placeholder="model_version">
@@ -104,36 +106,60 @@
                 </form>
             </section>
             <footer class="modal-card-foot">
-                <button class="button is-success" onclick="createModel()" data-i18n="create">Create</button>
-                <button class="button" onclick="closeCreateModelModal()" data-i18n="cancel">Cancel</button>
+                <button class="button is-success" onclick="createModel()" data-i18n="create">创建</button>
+                <button class="button" onclick="closeCreateModelModal()" data-i18n="cancel">取消</button>
             </footer>
         </div>
     </div>
 
-    <script src="/static/js/locales.js"></script>
-    <script src="/static/js/i18n.js"></script>
     <script>
-        // Initialize i18n
-        i18n.init();
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication first
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.log('No token found, redirecting to login page...');
+                window.location.href = '/login';
+                return;
+            }
 
-        // Load navigation bar
-        fetch('/components/navbar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('navbar-container').innerHTML = html;
-            })
-            .catch(error => console.error('Error loading navbar:', error));
+            // 初始化语言
+            const savedLang = localStorage.getItem('language') || 'zh';
+            document.documentElement.lang = savedLang;
+            updateTranslations(savedLang);
 
-        // Check authentication
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/login';
-        }
+            // 加载导航栏
+            const navbarContainer = document.getElementById('navbar-container');
+            if (navbarContainer) {
+                try {
+                    const response = await fetch('/components/navbar.html');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const html = await response.text();
+                    navbarContainer.innerHTML = html;
+                } catch (error) {
+                    console.error('Error loading navbar:', error);
+                    navbarContainer.innerHTML = `
+                        <div class="notification is-warning">
+                            <button class="delete"></button>
+                            <p data-i18n="navbar_load_error">导航栏加载失败，请刷新页面重试</p>
+                        </div>
+                    `;
+                    navbarContainer.querySelector('.delete')?.addEventListener('click', () => {
+                        navbarContainer.innerHTML = '';
+                    });
+                }
+            }
+
+            // Load models
+            await loadModels();
+        });
 
         // Load models
         async function loadModels() {
+            const token = localStorage.getItem('token');
             try {
-                const response = await fetch('/api/v1/models', {
+                const response = await fetch('/api/v1/models/', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -172,12 +198,15 @@
                             `;
                         });
                     }
+                } else if (response.status === 401) {
+                    // 未授权，重定向到登录页面
+                    window.location.href = '/login';
                 } else {
-                    alert('加载模型列表失败');
+                    alert(getTranslation('load_models_failed'));
                 }
             } catch (error) {
                 console.error('加载模型时出错:', error);
-                alert('加载模型时出错');
+                alert(getTranslation('load_models_error'));
             }
         }
 
@@ -195,9 +224,10 @@
             const form = document.getElementById('createModelForm');
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
+            const token = localStorage.getItem('token');
 
             try {
-                const response = await fetch('/api/v1/models/db/create', {
+                const response = await fetch('/api/v1/models/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -208,21 +238,22 @@
 
                 if (response.ok) {
                     closeCreateModelModal();
-                    loadModels();
-                    alert('创建模型成功');
+                    await loadModels();
+                    alert(getTranslation('create_model_success'));
                 } else {
-                    alert('创建模型失败');
+                    alert(getTranslation('create_model_failed'));
                 }
             } catch (error) {
                 console.error('创建模型时出错:', error);
-                alert('创建模型时出错');
+                alert(getTranslation('create_model_error'));
             }
         }
 
         // Edit model
         async function editModel(modelId) {
+            const token = localStorage.getItem('token');
             try {
-                const response = await fetch(`/api/v1/models/db/${modelId}`, {
+                const response = await fetch(`/api/v1/models/${modelId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -231,21 +262,22 @@
                 if (response.ok) {
                     const model = await response.json();
                     // TODO: 实现编辑模型的逻辑
-                    alert('编辑模型功能待实现');
+                    alert(getTranslation('edit_model_not_implemented'));
                 } else {
-                    alert('获取模型信息失败');
+                    alert(getTranslation('get_model_failed'));
                 }
             } catch (error) {
                 console.error('编辑模型时出错:', error);
-                alert('编辑模型时出错');
+                alert(getTranslation('edit_model_error'));
             }
         }
 
         // Delete model
         async function deleteModel(modelId) {
-            if (confirm('确定要删除这个模型吗？')) {
+            const token = localStorage.getItem('token');
+            if (confirm(getTranslation('confirm_delete_model'))) {
                 try {
-                    const response = await fetch(`/api/v1/models/db/${modelId}`, {
+                    const response = await fetch(`/api/v1/models/${modelId}`, {
                         method: 'DELETE',
                         headers: {
                             'Authorization': `Bearer ${token}`
@@ -253,20 +285,17 @@
                     });
 
                     if (response.ok) {
-                        loadModels();
-                        alert('删除模型成功');
+                        await loadModels();
+                        alert(getTranslation('delete_model_success'));
                     } else {
-                        alert('删除模型失败');
+                        alert(getTranslation('delete_model_failed'));
                     }
                 } catch (error) {
                     console.error('删除模型时出错:', error);
-                    alert('删除模型时出错');
+                    alert(getTranslation('delete_model_error'));
                 }
             }
         }
-
-        // Load models on page load
-        loadModels();
     </script>
 </body>
 </html> 
