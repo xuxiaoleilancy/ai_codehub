@@ -26,6 +26,96 @@ class ModelMetadata(BaseModel):
     file_size: int
     parameters: Optional[dict] = None
 
+@router.post("/db/create", response_model=ModelInDB)
+async def create_db_model(
+    model_in: ModelCreate,
+    current_user: dict = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """在数据库中创建新模型"""
+    user = db.query(User).filter(User.username == current_user["username"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    
+    db_model = Model(
+        **model_in.dict(),
+        owner_id=user.id,
+        status=ModelStatus.DRAFT
+    )
+    db.add(db_model)
+    db.commit()
+    db.refresh(db_model)
+    return db_model
+
+@router.get("/db/list", response_model=List[ModelInDB])
+async def get_db_models(
+    current_user: dict = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """获取数据库中的模型列表"""
+    user = db.query(User).filter(User.username == current_user["username"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    return db.query(Model).filter(Model.owner_id == user.id).all()
+
+@router.get("/db/{model_id}", response_model=ModelInDB)
+async def get_db_model(
+    model_id: int,
+    current_user: dict = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """获取数据库中的单个模型"""
+    user = db.query(User).filter(User.username == current_user["username"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    
+    model = db.query(Model).filter(Model.id == model_id, Model.owner_id == user.id).first()
+    if not model:
+        raise HTTPException(status_code=404, detail="模型不存在")
+    return model
+
+@router.put("/db/{model_id}", response_model=ModelInDB)
+async def update_db_model(
+    model_id: int,
+    model_in: ModelUpdate,
+    current_user: dict = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """更新数据库中的模型"""
+    user = db.query(User).filter(User.username == current_user["username"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    
+    model = db.query(Model).filter(Model.id == model_id, Model.owner_id == user.id).first()
+    if not model:
+        raise HTTPException(status_code=404, detail="模型不存在")
+    
+    for field, value in model_in.dict(exclude_unset=True).items():
+        setattr(model, field, value)
+    
+    db.commit()
+    db.refresh(model)
+    return model
+
+@router.delete("/db/{model_id}")
+async def delete_db_model(
+    model_id: int,
+    current_user: dict = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """从数据库中删除模型"""
+    user = db.query(User).filter(User.username == current_user["username"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    
+    model = db.query(Model).filter(Model.id == model_id, Model.owner_id == user.id).first()
+    if not model:
+        raise HTTPException(status_code=404, detail="模型不存在")
+    
+    db.delete(model)
+    db.commit()
+    return {"message": "模型已删除"}
+
 @router.post("/upload")
 async def upload_model(
     file: UploadFile = File(...),
@@ -151,97 +241,7 @@ async def update_model_metadata(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/db/list", response_model=List[ModelInDB])
-async def get_db_models(
-    current_user: dict = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """获取数据库中的模型列表"""
-    user = db.query(User).filter(User.username == current_user["username"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
-    return db.query(Model).filter(Model.owner_id == user.id).all()
-
-@router.get("/db/{model_id}", response_model=ModelInDB)
-async def get_db_model(
-    model_id: int,
-    current_user: dict = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """获取数据库中的单个模型"""
-    user = db.query(User).filter(User.username == current_user["username"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
-    
-    model = db.query(Model).filter(Model.id == model_id, Model.owner_id == user.id).first()
-    if not model:
-        raise HTTPException(status_code=404, detail="模型不存在")
-    return model
-
-@router.post("/db/create", response_model=ModelInDB)
-async def create_db_model(
-    model_in: ModelCreate,
-    current_user: dict = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """在数据库中创建新模型"""
-    user = db.query(User).filter(User.username == current_user["username"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
-    
-    db_model = Model(
-        **model_in.dict(),
-        owner_id=user.id,
-        status=ModelStatus.DRAFT
-    )
-    db.add(db_model)
-    db.commit()
-    db.refresh(db_model)
-    return db_model
-
-@router.put("/db/{model_id}", response_model=ModelInDB)
-async def update_db_model(
-    model_id: int,
-    model_in: ModelUpdate,
-    current_user: dict = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """更新数据库中的模型"""
-    user = db.query(User).filter(User.username == current_user["username"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
-    
-    model = db.query(Model).filter(Model.id == model_id, Model.owner_id == user.id).first()
-    if not model:
-        raise HTTPException(status_code=404, detail="模型不存在")
-    
-    for field, value in model_in.dict(exclude_unset=True).items():
-        setattr(model, field, value)
-    
-    db.commit()
-    db.refresh(model)
-    return model
-
-@router.delete("/db/{model_id}")
-async def delete_db_model(
-    model_id: int,
-    current_user: dict = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """从数据库中删除模型"""
-    user = db.query(User).filter(User.username == current_user["username"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
-    
-    model = db.query(Model).filter(Model.id == model_id, Model.owner_id == user.id).first()
-    if not model:
-        raise HTTPException(status_code=404, detail="模型不存在")
-    
-    db.delete(model)
-    db.commit()
-    return {"message": "模型已删除"}
-
-@router.get("/models", response_model=List[ModelInDB])
+@router.get("/", response_model=List[ModelInDB])
 async def get_models(
     current_user: Dict[str, Any] = Depends(get_current_active_user),
     db: Session = Depends(get_db)

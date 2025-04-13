@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI CodeHub - Your AI Code Management Platform</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <title data-translate="welcome">Welcome to AI CodeHub</title>
     <style>
         .hero {
             background: linear-gradient(135deg, #4a90e2, #7c4dff);
@@ -21,6 +22,9 @@
         .section {
             padding: 3rem 1.5rem;
         }
+        .navbar {
+            margin-bottom: 2rem;
+        }
     </style>
 </head>
 <body>
@@ -30,15 +34,15 @@
     <section class="hero is-medium">
         <div class="hero-body">
             <div class="container">
-                <h1 class="title is-1 has-text-white">
+                <h1 class="title is-1 has-text-white" data-translate="welcome">
                     Welcome to AI CodeHub
                 </h1>
                 <h2 class="subtitle is-3 has-text-white">
                     Your One-Stop Platform for AI Model Management and Deployment
                 </h2>
                 <div class="buttons">
-                    <a href="/models" class="button is-primary is-large">Explore Models</a>
-                    <a href="/register" class="button is-light is-large">Get Started</a>
+                    <a href="/models" class="button is-primary is-large" data-translate="explore_models">Explore Models</a>
+                    <a href="/register" class="button is-light is-large" data-translate="get_started">Get Started</a>
                 </div>
             </div>
         </div>
@@ -47,13 +51,13 @@
     <!-- Features Section -->
     <section class="section">
         <div class="container">
-            <h2 class="title has-text-centered mb-6">Key Features</h2>
+            <h2 class="title has-text-centered mb-6" data-translate="key_features">Key Features</h2>
             <div class="columns">
                 <div class="column is-4">
                     <div class="card feature-card">
                         <div class="card-content">
-                            <h3 class="title is-4">Model Management</h3>
-                            <p class="content">
+                            <h3 class="title is-4" data-translate="model_management">Model Management</h3>
+                            <p class="content" data-translate="model_management_desc">
                                 Easily upload, version, and manage your AI models in one centralized location.
                             </p>
                         </div>
@@ -62,8 +66,8 @@
                 <div class="column is-4">
                     <div class="card feature-card">
                         <div class="card-content">
-                            <h3 class="title is-4">Deployment Tools</h3>
-                            <p class="content">
+                            <h3 class="title is-4" data-translate="deployment_tools">Deployment Tools</h3>
+                            <p class="content" data-translate="deployment_tools_desc">
                                 Deploy your models with just a few clicks using our streamlined deployment tools.
                             </p>
                         </div>
@@ -72,8 +76,8 @@
                 <div class="column is-4">
                     <div class="card feature-card">
                         <div class="card-content">
-                            <h3 class="title is-4">Collaboration</h3>
-                            <p class="content">
+                            <h3 class="title is-4" data-translate="collaboration">Collaboration</h3>
+                            <p class="content" data-translate="collaboration_desc">
                                 Work together with your team, share models, and manage access controls.
                             </p>
                         </div>
@@ -86,21 +90,21 @@
     <!-- Getting Started Section -->
     <section class="section has-background-light">
         <div class="container">
-            <h2 class="title has-text-centered mb-6">Getting Started</h2>
+            <h2 class="title has-text-centered mb-6" data-translate="getting_started">Getting Started</h2>
             <div class="columns is-centered">
                 <div class="column is-8">
                     <div class="content has-text-centered">
-                        <p class="is-size-5">
+                        <p class="is-size-5" data-translate="getting_started_desc">
                             Start managing your AI models in three simple steps:
                         </p>
                         <ol class="is-size-5">
-                            <li>Create an account</li>
-                            <li>Upload your first model</li>
-                            <li>Deploy and share with your team</li>
+                            <li data-translate="step1">Create an account</li>
+                            <li data-translate="step2">Upload your first model</li>
+                            <li data-translate="step3">Deploy and share with your team</li>
                         </ol>
                         <div class="buttons is-centered mt-5">
-                            <a href="/register" class="button is-primary is-medium">Create Account</a>
-                            <a href="/docs" class="button is-link is-medium">View Documentation</a>
+                            <a href="/register" class="button is-primary is-medium" data-translate="create_account">Create Account</a>
+                            <a href="/docs" class="button is-link is-medium" data-translate="view_docs">View Documentation</a>
                         </div>
                     </div>
                 </div>
@@ -109,13 +113,72 @@
     </section>
 
     <script>
-        // Load navigation bar
+        // 翻译函数
+        function updateTranslations(lang) {
+            const translations = {
+                en: {
+                    welcome: 'Welcome to AI CodeHub',
+                    explore_models: 'Explore Models',
+                    get_started: 'Get Started',
+                    key_features: 'Key Features',
+                    model_management: 'Model Management',
+                    model_management_desc: 'Easily upload, version, and manage your AI models in one centralized location.',
+                    deployment_tools: 'Deployment Tools',
+                    deployment_tools_desc: 'Deploy your models with just a few clicks using our streamlined deployment tools.',
+                    collaboration: 'Collaboration',
+                    collaboration_desc: 'Work together with your team, share models, and manage access controls.',
+                    getting_started: 'Getting Started',
+                    getting_started_desc: 'Start managing your AI models in three simple steps:',
+                    step1: 'Create an account',
+                    step2: 'Upload your first model',
+                    step3: 'Deploy and share with your team',
+                    create_account: 'Create Account',
+                    view_docs: 'View Documentation'
+                },
+                cn: {
+                    welcome: '欢迎使用 AI CodeHub',
+                    explore_models: '浏览模型',
+                    get_started: '开始使用',
+                    key_features: '主要功能',
+                    model_management: '模型管理',
+                    model_management_desc: '轻松上传、版本控制和集中管理您的 AI 模型。',
+                    deployment_tools: '部署工具',
+                    deployment_tools_desc: '使用我们简化的部署工具，只需点击几下即可部署模型。',
+                    collaboration: '协作功能',
+                    collaboration_desc: '与团队协作，共享模型，管理访问控制。',
+                    getting_started: '开始使用',
+                    getting_started_desc: '通过三个简单步骤开始管理您的 AI 模型：',
+                    step1: '创建账户',
+                    step2: '上传第一个模型',
+                    step3: '部署并与团队共享',
+                    create_account: '创建账户',
+                    view_docs: '查看文档'
+                }
+            };
+
+            const elements = document.querySelectorAll('[data-translate]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+        }
+
+        // 加载导航栏并初始化语言
         fetch('/components/navbar.html')
             .then(response => response.text())
             .then(html => {
                 document.getElementById('navbar-container').innerHTML = html;
+                const currentLang = localStorage.getItem('language') || 'cn';  // 默认使用中文
+                updateTranslations(currentLang);
             })
             .catch(error => console.error('Error loading navbar:', error));
+
+        // 监听语言变化
+        window.addEventListener('languageChanged', (e) => {
+            updateTranslations(e.detail);
+        });
     </script>
 </body>
 </html> 

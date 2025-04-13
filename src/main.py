@@ -43,7 +43,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
-app.include_router(model_router, prefix="/api/v1", tags=["models"])
+app.include_router(model_router, prefix="/api/v1/models", tags=["models"])
 app.include_router(project_router, prefix="/api/projects", tags=["projects"])
 
 # Mount static files directory
@@ -91,11 +91,18 @@ async def health_check():
     return {"status": "healthy"}
 
 # Serve static files directly
-@app.get("/{path:path}")
+@app.get("/static/{path:path}")
 async def serve_static(path: str):
     static_path = static_dir / path
     if static_path.exists():
         return FileResponse(str(static_path))
+    raise HTTPException(status_code=404, detail="File not found")
+
+@app.get("/components/{path:path}")
+async def serve_components(path: str):
+    component_path = components_dir / path
+    if component_path.exists():
+        return FileResponse(str(component_path))
     raise HTTPException(status_code=404, detail="File not found")
 
 if __name__ == "__main__":

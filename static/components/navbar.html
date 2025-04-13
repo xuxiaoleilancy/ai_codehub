@@ -1,34 +1,166 @@
 <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
         <a class="navbar-item" href="/">
-            <strong>AI CodeHub</strong>
+            <img src="/static/favicon.svg" alt="AI CodeHub Logo" width="28" height="28">
+            <span class="ml-2">AI CodeHub</span>
+        </a>
+
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasic">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
         </a>
     </div>
 
-    <div class="navbar-menu">
+    <div id="navbarBasic" class="navbar-menu">
         <div class="navbar-start">
-            <a class="navbar-item" href="/">
+            <a class="navbar-item" href="/" data-translate="home">
                 Home
             </a>
-            <a class="navbar-item" href="/models">
+            <a class="navbar-item" href="/models" data-translate="models">
                 Models
             </a>
-            <a class="navbar-item" href="/projects">
+            <a class="navbar-item" href="/projects" data-translate="projects">
                 Projects
+            </a>
+            <a class="navbar-item" href="/docs" data-translate="documentation">
+                Documentation
+            </a>
+            <a class="navbar-item" href="/examples" data-translate="examples">
+                Examples
             </a>
         </div>
 
         <div class="navbar-end">
             <div class="navbar-item">
                 <div class="buttons">
-                    <a class="button is-light" href="/login">
+                    <div class="language-switcher">
+                        <button class="button is-light" id="lang-en">EN</button>
+                        <button class="button is-light" id="lang-cn">中文</button>
+                    </div>
+                    <a class="button is-light" href="/login" data-translate="login">
                         Log in
                     </a>
-                    <a class="button is-primary" href="/register">
+                    <a class="button is-primary" href="/register" data-translate="signup">
                         <strong>Sign up</strong>
                     </a>
                 </div>
             </div>
         </div>
     </div>
-</nav> 
+</nav>
+
+<style>
+    .language-switcher {
+        display: inline-flex;
+        margin-right: 0.5rem;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid #dbdbdb;
+    }
+    
+    .language-switcher button {
+        min-width: 3rem;
+        padding: 0.5rem;
+        border: none;
+        background-color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .language-switcher button:first-child {
+        border-right: 1px solid #dbdbdb;
+    }
+    
+    .language-switcher button.active {
+        background-color: #3273dc;
+        color: white;
+    }
+    
+    .language-switcher button:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .language-switcher button.active:hover {
+        background-color: #276cda;
+    }
+</style>
+
+<script>
+    // 导航栏汉堡菜单
+    document.addEventListener('DOMContentLoaded', () => {
+        const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+        if ($navbarBurgers.length > 0) {
+            $navbarBurgers.forEach(el => {
+                el.addEventListener('click', () => {
+                    const target = el.dataset.target;
+                    const $target = document.getElementById(target);
+                    el.classList.toggle('is-active');
+                    $target.classList.toggle('is-active');
+                });
+            });
+        }
+
+        // 语言切换
+        const langEn = document.getElementById('lang-en');
+        const langCn = document.getElementById('lang-cn');
+        
+        if (langEn && langCn) {
+            // 设置初始状态
+            const currentLang = localStorage.getItem('language') || 'cn';
+            if (currentLang === 'en') {
+                langEn.classList.add('active');
+                langCn.classList.remove('active');
+            } else {
+                langEn.classList.remove('active');
+                langCn.classList.add('active');
+            }
+            
+            // 切换语言
+            langEn.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.setItem('language', 'en');
+                langEn.classList.add('active');
+                langCn.classList.remove('active');
+                // 触发自定义事件
+                window.dispatchEvent(new CustomEvent('languageChanged', { detail: 'en' }));
+            });
+            
+            langCn.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.setItem('language', 'cn');
+                langEn.classList.remove('active');
+                langCn.classList.add('active');
+                // 触发自定义事件
+                window.dispatchEvent(new CustomEvent('languageChanged', { detail: 'cn' }));
+            });
+        }
+
+        // 更新翻译
+        const translations = {
+            en: {
+                home: 'Home',
+                documentation: 'Documentation',
+                examples: 'Examples',
+                login: 'Log in',
+                signup: 'Sign up'
+            },
+            cn: {
+                home: '首页',
+                documentation: '文档',
+                examples: '示例',
+                login: '登录',
+                signup: '注册'
+            }
+        };
+
+        const currentLang = localStorage.getItem('language') || 'en';
+        const elements = document.querySelectorAll('[data-translate]');
+        elements.forEach(element => {
+            const key = element.getAttribute('data-translate');
+            if (translations[currentLang] && translations[currentLang][key]) {
+                element.textContent = translations[currentLang][key];
+            }
+        });
+    });
+</script> 

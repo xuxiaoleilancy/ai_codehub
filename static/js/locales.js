@@ -25,6 +25,7 @@ const locales = {
         'models': 'Models',
         'projects': 'Projects',
         'docs': 'Documentation',
+        'examples': 'Examples',
         
         // Auth
         'login_failed': 'Login failed. Please check your credentials.',
@@ -99,6 +100,7 @@ const locales = {
         'models': '模型',
         'projects': '项目',
         'docs': '文档',
+        'examples': '示例',
         
         // Auth
         'login_failed': '登录失败，请检查您的凭据。',

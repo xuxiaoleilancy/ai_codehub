@@ -46,3 +46,12 @@ const i18n = {
         });
     }
 }; 
+
+// 初始化语言
+function initLanguage() {
+    const savedLang = localStorage.getItem('language');
+    if (!savedLang) {
+        localStorage.setItem('language', 'cn');  // 默认设置为中文
+    }
+    updateTranslations(localStorage.getItem('language') || 'cn');
+} 
