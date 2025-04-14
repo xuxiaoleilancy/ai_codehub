@@ -65,66 +65,88 @@
     </section>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            // 加载导航栏
-            await loadNavbar();
-
-            // 处理登录表单提交
-            const form = document.getElementById('loginForm');
-            const errorMessage = document.getElementById('error-message');
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
+        // 保存认证信息
+        function saveAuth(token, expiresIn) {
+            try {
+                // 计算过期时间（当前时间 + 过期时间）
+                const expiryDate = new Date();
+                expiryDate.setMinutes(expiryDate.getMinutes() + expiresIn);
                 
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                
-                try {
-                    const response = await fetch('/api/v1/auth/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ username, password })
-                    });
+                // 保存 token 和过期时间
+                localStorage.setItem('token', token);
+                localStorage.setItem('tokenExpiry', expiryDate.toISOString());
+            } catch (error) {
+                console.error('保存认证信息时出错:', error);
+                throw error;
+            }
+        }
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log('Login successful, data:', data);
-                        
-                        // 保存用户信息和令牌
-                        localStorage.setItem('token', data.access_token);
-                        localStorage.setItem('username', data.username);
-                        localStorage.setItem('is_superuser', data.is_superuser);
-                        
-                        // 更新导航栏状态
-                        updateNavbarLoginState();
-                        
-                        // 显示成功消息
-                        errorMessage.textContent = i18n.getText('login_success');
-                        errorMessage.classList.remove('is-danger');
-                        errorMessage.classList.add('is-success');
-                        errorMessage.classList.remove('is-hidden');
-                        
-                        // 延迟跳转，让用户看到成功消息
-                        setTimeout(() => {
-                            window.location.replace('/models');
-                        }, 1000);
-                    } else {
-                        const error = await response.json();
-                        errorMessage.textContent = error.detail || i18n.getText('login_failed');
+        // 等待所有脚本加载完成
+        window.addEventListener('load', async () => {
+            try {
+                // 初始化语言
+                const currentLang = localStorage.getItem('language') || 'cn';
+                updateTranslations(currentLang);
+                
+                // 加载导航栏
+                await window.loadNavbar();
+
+                // 处理登录表单提交
+                const form = document.getElementById('loginForm');
+                const errorMessage = document.getElementById('error-message');
+
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const username = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
+                    
+                    try {
+                        const response = await fetch('/api/v1/auth/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ username, password })
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            // 保存认证信息
+                            try {
+                                saveAuth(result.access_token, 30); // 30分钟过期
+                                localStorage.setItem('username', result.username);
+                                localStorage.setItem('isSuperuser', result.is_superuser);
+                                
+                                // 登录成功后重定向到首页
+                                window.location.href = '/';
+                            } catch (error) {
+                                console.error('保存认证信息时出错:', error);
+                                throw new Error('认证功能未正确加载');
+                            }
+                        } else {
+                            const error = await response.json();
+                            errorMessage.textContent = error.detail || '登录失败';
+                            errorMessage.classList.remove('is-success');
+                            errorMessage.classList.add('is-danger');
+                            errorMessage.classList.remove('is-hidden');
+                        }
+                    } catch (error) {
+                        console.error('登录时出错:', error);
+                        errorMessage.textContent = error.message || '登录时出错';
                         errorMessage.classList.remove('is-success');
                         errorMessage.classList.add('is-danger');
                         errorMessage.classList.remove('is-hidden');
                     }
-                } catch (error) {
-                    console.error('Login error:', error);
-                    errorMessage.textContent = i18n.getText('login_failed');
-                    errorMessage.classList.remove('is-success');
-                    errorMessage.classList.add('is-danger');
-                    errorMessage.classList.remove('is-hidden');
-                }
-            });
+                });
+            } catch (error) {
+                console.error('初始化页面时出错:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = '页面初始化失败，请刷新重试';
+                errorMessage.classList.remove('is-success');
+                errorMessage.classList.add('is-danger');
+                errorMessage.classList.remove('is-hidden');
+            }
         });
     </script>
 </body>

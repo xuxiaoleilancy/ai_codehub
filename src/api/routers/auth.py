@@ -296,4 +296,30 @@ async def get_client_credentials(
         "access_token": access_token,
         "token_type": "bearer",
         "client_id": client_id,
-    } 
+    }
+
+@router.post("/refresh", response_model=Token)
+async def refresh_token(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """刷新访问令牌"""
+    try:
+        # 创建新的访问令牌
+        access_token = create_access_token(
+            data={"sub": current_user.username}
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "username": current_user.username,
+            "is_superuser": current_user.is_superuser,
+            "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="刷新令牌失败",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) 
