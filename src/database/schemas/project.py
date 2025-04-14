@@ -5,6 +5,7 @@ from datetime import datetime
 class ProjectBase(BaseModel):
     name: str
     description: Optional[str] = None
+    status: Optional[str] = "active"
 
 class ProjectCreate(ProjectBase):
     pass
@@ -19,4 +20,7 @@ class ProjectInDB(ProjectBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True 
+        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat() if v else None
+        } 

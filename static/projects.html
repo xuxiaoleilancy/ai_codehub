@@ -96,6 +96,50 @@
         </div>
     </div>
 
+    <!-- Edit Project Modal -->
+    <div class="modal" id="editProjectModal">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title" data-i18n="edit_project">编辑项目</p>
+                <button class="delete" aria-label="close" onclick="closeEditProjectModal()"></button>
+            </header>
+            <section class="modal-card-body">
+                <form id="editProjectForm">
+                    <div class="field">
+                        <label class="label" data-i18n="project_name">项目名称</label>
+                        <div class="control">
+                            <input class="input" type="text" id="editProjectName" name="name" required 
+                                   data-i18n-placeholder="project_name">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" data-i18n="project_description">描述</label>
+                        <div class="control">
+                            <textarea class="textarea" id="editProjectDescription" name="description" 
+                                      data-i18n-placeholder="project_description"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" data-i18n="project_status">状态</label>
+                        <div class="control">
+                            <input class="input" type="text" id="editProjectStatus" name="status" required 
+                                   data-i18n-placeholder="project_status">
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="editProjectId" name="id">
+                </form>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-success" onclick="updateProject()" data-i18n="update">更新</button>
+                <button class="button" onclick="closeEditProjectModal()" data-i18n="cancel">取消</button>
+            </footer>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             // 检查认证状态
@@ -112,7 +156,7 @@
         async function loadProjects() {
             const token = localStorage.getItem('token');
             try {
-                const response = await fetch('/api/v1/projects/', {
+                const response = await fetch('/api/v1/projects', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -126,7 +170,7 @@
                     if (!projects || projects.length === 0) {
                         tableBody.innerHTML = `
                             <tr>
-                                <td colspan="4" class="has-text-centered" data-i18n="no_projects">
+                                <td colspan="5" class="has-text-centered">
                                     暂无项目
                                 </td>
                             </tr>
@@ -136,14 +180,17 @@
                             tableBody.innerHTML += `
                                 <tr>
                                     <td>${project.name}</td>
-                                    <td>${project.description || ''}</td>
+                                    <td>${project.description || '无描述'}</td>
+                                    <td>${project.created_at}</td>
                                     <td>${project.status}</td>
                                     <td>
                                         <div class="buttons">
-                                            <button class="button is-small is-info" onclick="editProject('${project.id}')" 
-                                                    data-i18n="edit">编辑</button>
-                                            <button class="button is-small is-danger" onclick="deleteProject('${project.id}')" 
-                                                    data-i18n="delete">删除</button>
+                                            <button class="button is-small is-info" onclick="editProject('${project.id}')">
+                                                编辑
+                                            </button>
+                                            <button class="button is-small is-danger" onclick="deleteProject('${project.id}')">
+                                                删除
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -154,11 +201,11 @@
                     // 未授权，重定向到登录页面
                     window.location.href = '/login';
                 } else {
-                    alert(getTranslation('load_projects_failed'));
+                    alert('加载项目失败');
                 }
             } catch (error) {
                 console.error('加载项目时出错:', error);
-                alert(getTranslation('load_projects_error'));
+                alert('加载项目时出错');
             }
         }
 
@@ -179,7 +226,7 @@
             const token = localStorage.getItem('token');
 
             try {
-                const response = await fetch('/api/v1/projects/', {
+                const response = await fetch('/api/v1/projects', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -191,13 +238,13 @@
                 if (response.ok) {
                     closeCreateProjectModal();
                     await loadProjects();
-                    alert(getTranslation('create_project_success'));
+                    alert('项目创建成功');
                 } else {
-                    alert(getTranslation('create_project_failed'));
+                    alert('创建项目失败');
                 }
             } catch (error) {
                 console.error('创建项目时出错:', error);
-                alert(getTranslation('create_project_error'));
+                alert('创建项目时出错');
             }
         }
 
@@ -205,6 +252,7 @@
         async function editProject(projectId) {
             const token = localStorage.getItem('token');
             try {
+                // 获取项目详情
                 const response = await fetch(`/api/v1/projects/${projectId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -213,42 +261,85 @@
 
                 if (response.ok) {
                     const project = await response.json();
-                    // TODO: 实现编辑项目的逻辑
-                    alert(getTranslation('edit_project_not_implemented'));
+                    // 填充编辑表单
+                    document.getElementById('editProjectName').value = project.name;
+                    document.getElementById('editProjectDescription').value = project.description || '';
+                    document.getElementById('editProjectStatus').value = project.status;
+                    document.getElementById('editProjectId').value = projectId;
+                    // 显示编辑模态框
+                    document.getElementById('editProjectModal').classList.add('is-active');
                 } else {
-                    alert(getTranslation('get_project_failed'));
+                    alert('获取项目详情失败');
                 }
             } catch (error) {
                 console.error('编辑项目时出错:', error);
-                alert(getTranslation('edit_project_error'));
+                alert('编辑项目时出错');
+            }
+        }
+
+        // Update project
+        async function updateProject() {
+            const form = document.getElementById('editProjectForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            const projectId = data.id;
+            delete data.id; // 移除 id 字段
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch(`/api/v1/projects/${projectId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeEditProjectModal();
+                    await loadProjects();
+                    alert('项目更新成功');
+                } else {
+                    alert('更新项目失败');
+                }
+            } catch (error) {
+                console.error('更新项目时出错:', error);
+                alert('更新项目时出错');
             }
         }
 
         // Delete project
         async function deleteProject(projectId) {
-            const token = localStorage.getItem('token');
-            if (confirm(getTranslation('confirm_delete_project'))) {
-                try {
-                    const response = await fetch(`/api/v1/projects/${projectId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-
-                    if (response.ok) {
-                        await loadProjects();
-                        alert(getTranslation('delete_project_success'));
-                    } else {
-                        alert(getTranslation('delete_project_failed'));
-                    }
-                } catch (error) {
-                    console.error('删除项目时出错:', error);
-                    alert(getTranslation('delete_project_error'));
-                }
+            if (!confirm('确定要删除这个项目吗？')) {
+                return;
             }
+
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/api/v1/projects/${projectId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    await loadProjects();
+                    alert('项目删除成功');
+                } else {
+                    alert('删除项目失败');
+                }
+            } catch (error) {
+                console.error('删除项目时出错:', error);
+                alert('删除项目时出错');
+            }
+        }
+
+        // Modal functions
+        function closeEditProjectModal() {
+            document.getElementById('editProjectModal').classList.remove('is-active');
         }
     </script>
 </body>
-</html> 
 </html> 

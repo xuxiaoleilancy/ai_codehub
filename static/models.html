@@ -113,6 +113,54 @@
         </div>
     </div>
 
+    <!-- Edit Model Modal -->
+    <div class="modal" id="editModelModal">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title" data-i18n="edit_model">编辑模型</p>
+                <button class="delete" aria-label="close" onclick="closeEditModelModal()"></button>
+            </header>
+            <section class="modal-card-body">
+                <form id="editModelForm">
+                    <input type="hidden" id="editModelId">
+                    <div class="field">
+                        <label class="label" data-i18n="model_name">模型名称</label>
+                        <div class="control">
+                            <input class="input" type="text" id="editModelName" name="name" required 
+                                   data-i18n-placeholder="model_name">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" data-i18n="model_type">模型类型</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="editModelType" name="type" required>
+                                    <option value="classification" data-i18n="classification">分类</option>
+                                    <option value="regression" data-i18n="regression">回归</option>
+                                    <option value="generative" data-i18n="generative">生成</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" data-i18n="model_version">版本</label>
+                        <div class="control">
+                            <input class="input" type="text" id="editModelVersion" name="version" required 
+                                   data-i18n-placeholder="model_version">
+                        </div>
+                    </div>
+                </form>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-success" onclick="updateModel()" data-i18n="save">保存</button>
+                <button class="button" onclick="closeEditModelModal()" data-i18n="cancel">取消</button>
+            </footer>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             // 检查认证状态
@@ -189,6 +237,14 @@
             document.getElementById('createModelModal').classList.remove('is-active');
         }
 
+        function showEditModelModal() {
+            document.getElementById('editModelModal').classList.add('is-active');
+        }
+
+        function closeEditModelModal() {
+            document.getElementById('editModelModal').classList.remove('is-active');
+        }
+
         // Create model
         async function createModel() {
             const form = document.getElementById('createModelForm');
@@ -223,7 +279,7 @@
         async function editModel(modelId) {
             const token = localStorage.getItem('token');
             try {
-                const response = await fetch(`/api/v1/models/${modelId}`, {
+                const response = await fetch(`/api/v1/models/db/${modelId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -231,8 +287,15 @@
 
                 if (response.ok) {
                     const model = await response.json();
-                    // TODO: 实现编辑模型的逻辑
-                    alert(getTranslation('edit_model_not_implemented'));
+                    // 填充编辑表单
+                    document.getElementById('editModelId').value = model.id;
+                    document.getElementById('editModelName').value = model.name;
+                    document.getElementById('editModelType').value = model.type;
+                    document.getElementById('editModelVersion').value = model.version;
+                    // 显示编辑模态框
+                    showEditModelModal();
+                } else if (response.status === 404) {
+                    alert(getTranslation('model_not_found'));
                 } else {
                     alert(getTranslation('get_model_failed'));
                 }
@@ -242,10 +305,43 @@
             }
         }
 
+        // Update model
+        async function updateModel() {
+            const modelId = document.getElementById('editModelId').value;
+            const form = document.getElementById('editModelForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch(`/api/v1/models/db/${modelId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeEditModelModal();
+                    await loadModels();
+                    alert(getTranslation('update_model_success'));
+                } else if (response.status === 404) {
+                    alert(getTranslation('model_not_found'));
+                } else {
+                    alert(getTranslation('update_model_failed'));
+                }
+            } catch (error) {
+                console.error('更新模型时出错:', error);
+                alert(getTranslation('update_model_error'));
+            }
+        }
+
         // Delete model
         async function deleteModel(modelId) {
             const token = localStorage.getItem('token');
-            if (confirm(getTranslation('confirm_delete_model'))) {
+            if (confirm('确定要删除这个模型吗？')) {
                 try {
                     const response = await fetch(`/api/v1/models/${modelId}`, {
                         method: 'DELETE',
@@ -256,13 +352,15 @@
 
                     if (response.ok) {
                         await loadModels();
-                        alert(getTranslation('delete_model_success'));
+                        alert('模型删除成功');
+                    } else if (response.status === 404) {
+                        alert('模型不存在');
                     } else {
-                        alert(getTranslation('delete_model_failed'));
+                        alert('删除模型失败');
                     }
                 } catch (error) {
                     console.error('删除模型时出错:', error);
-                    alert(getTranslation('delete_model_error'));
+                    alert('删除模型时出错');
                 }
             }
         }
